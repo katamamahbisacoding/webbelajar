@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Master - Ultimate Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            overflow-x: hidden;
+        }
+        
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 128, 0, 0.15);
+        }
+
+        /* Modern 3D Buttons */
+        .btn-3d {
+            transition: all 0.1s;
+            border-bottom-width: 4px;
+            transform: translateY(0);
+        }
+        .btn-3d:active {
+            transform: translateY(3px);
+            border-bottom-width: 0px;
+            margin-top: 3px; /* Keep layout stable */
+        }
+
+        .btn-option {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #e2e8f0;
+        }
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .btn-option:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Animations */
+        .fire-anim { animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popUp {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            70% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; } /* Stay visible briefly */
+        }
+        
+        .coin-float { animation: floatUp 0.8s ease-out forwards; }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+        }
+
+        /* Character SVG Parts */
+        .hidden-part { display: none; }
+        
+        /* Utility */
+        .text-shadow-sm { text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700 min-h-screen flex flex-col items-center justify-center p-4 relative selection:bg-green-200">
+
+    <!-- OVERLAYS -->
+    <div id="coin-anim-container" class="fixed inset-0 pointer-events-none z-[120] flex justify-center items-center"></div>
+
+    <div id="streak-overlay" class="fixed inset-0 pointer-events-none flex items-center justify-center z-[110] hidden">
+        <div class="text-center fire-anim bg-white/90 p-8 rounded-3xl shadow-2xl backdrop-blur-sm border-4 border-orange-100">
+            <div class="text-8xl mb-2">🔥</div>
+            <div class="text-4xl font-black text-orange-500 tracking-tighter uppercase">On Fire!</div>
+            <div class="text-xl font-bold text-orange-400 mt-1">Keep it going!</div>
+        </div>
+    </div>
+
+    <!-- HEADER BUTTONS (Lobby & Shop) -->
+    <div class="fixed top-4 left-4 z-50">
+        <button onclick="backToLobby()" class="btn-3d bg-white text-slate-600 px-4 py-2 rounded-xl border-b-4 border-slate-200 hover:bg-slate-50 font-bold shadow-sm flex items-center gap-2 text-sm">
+            <span class="iconify" data-icon="akar-icons:arrow-back-thick"></span> Lobby
+        </button>
+    </div>
+
+    <div class="fixed top-4 right-4 z-50">
+        <button onclick="openShop()" class="btn-3d bg-white text-yellow-600 px-4 py-2 rounded-xl border-b-4 border-yellow-200 hover:bg-yellow-50 font-bold shadow-sm flex items-center gap-2">
+            <span class="text-xl">🪙</span> <span id="global-coins">0</span>
+        </button>
+    </div>
+
+    <!-- === GAME CONTAINER === -->
+    <div id="game-container" class="w-full max-w-5xl mx-auto hidden flex flex-col lg:flex-row gap-6 items-start mt-12 lg:mt-0">
+        
+        <!-- LEFT: Character & Stats -->
+        <div class="w-full lg:w-1/3 flex flex-col items-center gap-4">
+            <!-- Avatar Card -->
+            <div class="glass-card p-6 relative w-full max-w-[280px] mx-auto flex flex-col items-center bg-gradient-to-b from-white to-blue-50">
+                <div class="absolute -top-3 bg-blue-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg tracking-wide uppercase">
+                    Avatar
+                </div>
+                
+                <!-- SVG AVATAR -->
+                <svg id="avatar-svg" viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-xl transform hover:scale-105 transition duration-500" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#fde6d5;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#fbcba8;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <g id="body-group">
+                        <path d="M50,140 Q50,200 100,200 Q150,200 150,140 L150,130 Q150,110 130,110 L70,110 Q50,110 50,130 Z" fill="#3b82f6"/>
+                        <rect x="85" y="100" width="30" height="20" fill="#fbcba8"/>
+                        <circle cx="100" cy="70" r="45" fill="url(#skinGrad)" />
+                        <circle cx="55" cy="70" r="10" fill="#fbcba8"/>
+                        <circle cx="145" cy="70" r="10" fill="#fbcba8"/>
+                    </g>
+                    <g id="face-group">
+                        <circle cx="85" cy="65" r="5" fill="#334155"/>
+                        <circle cx="115" cy="65" r="5" fill="#334155"/>
+                        <path d="M85,85 Q100,95 115,85" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+                        <ellipse cx="75" cy="78" rx="6" ry="3" fill="#fca5a5" opacity="0.6"/>
+                        <ellipse cx="125" cy="78" rx="6" ry="3" fill="#fca5a5" opacity="0.6"/>
+                    </g>
+                    
+                    <!-- Accessories -->
+                    
+                    <!-- Standard Glasses -->
+                    <g id="acc-glasses" class="hidden-part">
+                        <g stroke="#1e293b" stroke-width="3" fill="none">
+                            <circle cx="85" cy="65" r="13"/>
+                            <circle cx="115" cy="65" r="13"/>
+                            <line x1="98" y1="65" x2="102" y2="65"/>
+                            <path d="M50,60 L72,65" stroke-width="2"/>
+                            <path d="M150,60 L128,65" stroke-width="2"/>
+                        </g>
+                    </g>
+                    <!-- Shades (Boss) -->
+                    <g id="acc-shades" class="hidden-part">
+                         <path d="M70,60 L100,60 L100,70 Q90,75 70,70 Z" fill="#111827"/>
+                         <path d="M100,60 L130,60 L130,70 Q110,75 100,70 Z" fill="#111827"/>
+                         <line x1="98" y1="62" x2="102" y2="62" stroke="#111827" stroke-width="3"/>
+                         <path d="M50,60 L70,62" stroke="#111827" stroke-width="2"/>
+                         <path d="M150,60 L130,62" stroke="#111827" stroke-width="2"/>
+                    </g>
+
+                    <!-- Ties -->
+                    <g id="acc-tie" class="hidden-part">
+                        <path d="M100,110 L92,130 L100,155 L108,130 Z" fill="#dc2626"/>
+                        <circle cx="100" cy="112" r="4" fill="#991b1b"/>
+                    </g>
+                    <g id="acc-gold-tie" class="hidden-part">
+                        <path d="M100,110 L92,130 L100,155 L108,130 Z" fill="#fbbf24"/>
+                        <circle cx="100" cy="112" r="4" fill="#d97706"/>
+                        <path d="M100,110 L100,155" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.5"/>
+                    </g>
+                    <g id="acc-bowtie" class="hidden-part">
+                         <path d="M100,115 L82,108 L82,122 Z" fill="#ef4444"/>
+                         <path d="M100,115 L118,108 L118,122 Z" fill="#ef4444"/>
+                         <circle cx="100" cy="115" r="4" fill="#b91c1c"/>
+                    </g>
+
+                    <!-- Hats -->
+                    <g id="acc-cap" class="hidden-part">
+                        <path d="M55,50 Q100,8 145,50" fill="#f59e0b"/>
+                        <rect x="52" y="45" width="96" height="12" rx="4" fill="#d97706"/>
+                        <path d="M130,45 L170,45 L160,55 L130,55 Z" fill="#b45309"/>
+                    </g>
+                    <g id="acc-grad" class="hidden-part">
+                        <path d="M50,45 L100,25 L150,45 L100,65 Z" fill="#1e293b"/>
+                        <path d="M148,45 L148,75" stroke="#fcd34d" stroke-width="2"/>
+                        <circle cx="148" cy="77" r="3" fill="#fcd34d"/>
+                        <rect x="65" y="60" width="70" height="15" fill="#334155"/>
+                    </g>
+
+                    <!-- Suits -->
+                    <g id="acc-suit" class="hidden-part">
+                         <path d="M50,140 L50,200 L150,200 L150,140 L130,110 L100,140 L70,110 Z" fill="#1e293b"/>
+                         <path d="M100,140 L100,200" stroke="#334155" stroke-width="1"/>
+                         <path d="M100,140 L85,110 L115,110 Z" fill="white"/>
+                    </g>
+                    <g id="acc-boss-suit" class="hidden-part">
+                         <!-- Darker, fancy suit with pocket square -->
+                         <path d="M50,140 L50,200 L150,200 L150,140 L130,110 L100,140 L70,110 Z" fill="#0f172a"/>
+                         <path d="M100,140 L100,200" stroke="#1e293b" stroke-width="1"/>
+                         <path d="M100,140 L85,110 L115,110 Z" fill="#f8fafc"/>
+                         <!-- Pocket Square -->
+                         <rect x="125" y="150" width="15" height="4" fill="#ef4444"/>
+                    </g>
+                </svg>
+            </div>
+            
+            <!-- Streak Badge -->
+            <div id="streak-box" class="glass-card w-full px-4 py-3 flex items-center justify-between hidden transition-all duration-300">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl animate-pulse">🔥</span>
+                    <span class="font-bold text-slate-600 text-sm uppercase">Streak</span>
+                </div>
+                <span id="current-streak" class="font-black text-2xl text-orange-500">0</span>
+            </div>
+        </div>
+
+        <!-- RIGHT: Question Area -->
+        <div class="w-full lg:w-2/3">
+            <!-- Progress Header -->
+            <div class="flex items-center justify-between mb-4 px-2">
+                <div class="flex flex-col w-full mr-4">
+                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                        <span>PROGRESS</span>
+                        <span id="q-counter">0 / 200</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+                        <div id="progress-bar" class="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-card p-6 md:p-10 min-h-[450px] flex flex-col justify-center relative bg-white">
+                <!-- Badges -->
+                <div class="absolute top-6 left-6 flex gap-2">
+                    <span id="topic-badge" class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full">Topic</span>
+                    <span id="type-badge" class="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full hidden">Essay</span>
+                </div>
+
+                <!-- Question Text -->
+                <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 mt-8 leading-relaxed" id="question-text">
+                    Loading question...
+                </h2>
+
+                <!-- Hint Box (Adaptive Translate) -->
+                <div id="hint-box" class="bg-blue-50/80 border-l-4 border-blue-400 p-4 rounded-r-xl mb-8 text-blue-800 text-sm backdrop-blur-sm transition-all duration-500">
+                    <span class="font-bold mr-1">💡 Terjemahan:</span> <span id="hint-text" class="italic">...</span>
+                </div>
+
+                <!-- Interaction Area -->
+                <div id="interaction-area" class="w-full fade-in"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === START SCREEN / LOBBY === -->
+    <div id="start-screen" class="max-w-md w-full text-center fade-in z-10">
+        <div class="glass-card p-8 bg-white/80">
+            <div class="w-32 h-32 mx-auto mb-6 bg-emerald-100 rounded-full flex items-center justify-center shadow-inner border-4 border-white relative">
+                 <span class="text-6xl">🎓</span>
+                 <div class="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-md border-2 border-white">200 SOAL</div>
+            </div>
+            
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">Interview Master</h1>
+            <p class="text-slate-500 mb-8 font-medium">Siap hadapi ujian praktik & dunia kerja?</p>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="openShop()" class="btn-3d bg-white p-4 rounded-xl border-b-4 border-slate-200 hover:border-yellow-300 group">
+                    <div class="text-3xl mb-1 group-hover:scale-110 transition">🕴️</div>
+                    <div class="font-bold text-slate-700 text-sm">Gaya Bos</div>
+                </button>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-center items-center shadow-sm">
+                    <div class="text-xs text-slate-400 font-bold uppercase">Total Koin</div>
+                    <div class="font-black text-yellow-500 text-xl" id="lobby-coins">0</div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="btn-3d w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold py-4 rounded-xl border-b-4 border-emerald-700 shadow-lg text-lg tracking-wide hover:brightness-110">
+                MULAI BELAJAR 🚀
+            </button>
+            
+            <div class="mt-6 text-xs text-slate-400 space-y-1">
+                <p>Level 1: Full Translate</p>
+                <p>Level 2: Hilang Sebagian</p>
+                <p>Level 3: Tanpa Translate (Hard)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- === RESULT SCREEN === -->
+    <div id="result-screen" class="w-full max-w-lg mx-auto hidden fade-in py-8 px-4 z-10">
+        <div class="glass-card p-8 text-center bg-white">
+            <h2 class="text-3xl font-black text-slate-800 mb-2">Sesi Selesai! 🎉</h2>
+            <p class="text-slate-500 mb-6">Semua soal berhasil kamu jawab.</p>
+
+            <div class="bg-yellow-50 p-6 rounded-2xl border-2 border-dashed border-yellow-200 mb-8">
+                <span class="block text-5xl font-black text-yellow-500 mb-1" id="session-coins">0</span>
+                <span class="text-yellow-700 font-bold uppercase text-xs tracking-widest">Koin Diperoleh</span>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="openShop()" class="btn-3d flex-1 bg-indigo-500 text-white py-3 rounded-xl border-b-4 border-indigo-700 font-bold">
+                    🛍️ Belanja
+                </button>
+                <button onclick="backToLobby()" class="btn-3d flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl border-b-4 border-slate-300 font-bold">
+                    🏠 Lobby
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === SHOP MODAL === -->
+    <div id="shop-modal" class="fixed inset-0 bg-slate-900/60 z-[200] hidden flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-bounce-in">
+            <div class="bg-slate-50 p-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">Dressing Room</h3>
+                <div class="bg-yellow-100 px-3 py-1 rounded-full text-yellow-700 font-bold text-sm flex items-center gap-1">
+                    🪙 <span id="shop-coins">0</span>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50" id="shop-grid">
+                <!-- Items injected by JS -->
+            </div>
+            <div class="p-5 border-t border-slate-100 bg-white">
+                <button onclick="closeShop()" class="btn-3d w-full bg-slate-800 text-white py-3 rounded-xl font-bold border-b-4 border-slate-950">
+                    Tutup Toko
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === FEEDBACK TOAST === -->
+    <div id="feedback-area" class="fixed bottom-0 left-0 w-full p-4 hidden z-50 flex justify-center pointer-events-none">
+        <div class="max-w-xl w-full bg-white rounded-2xl shadow-2xl border-t-4 p-5 pointer-events-auto transform transition-all duration-300 translate-y-full" id="feedback-box">
+            <div class="flex gap-4 items-start">
+                <div id="feedback-icon" class="text-3xl">✅</div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg text-slate-800" id="feedback-title">Benar!</h3>
+                    <p class="text-sm text-slate-600 leading-snug" id="feedback-subtitle">Penjelasan singkat.</p>
+                </div>
+                <div class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold hidden" id="feedback-coins">
+                    +20
+                </div>
+            </div>
+            <button onclick="nextQuestion()" class="btn-3d w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl border-b-4 border-indigo-800 font-bold text-sm tracking-widest uppercase">
+                LANJUT
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        let coins = parseInt(localStorage.getItem('im_coins')) || 0;
+        let inventory = JSON.parse(localStorage.getItem('im_inventory')) || ['default'];
+        let equipped = JSON.parse(localStorage.getItem('im_equipped')) || {}; 
+
+        // Soal: Sekarang ada 't' untuk Translate!
+        const templates = {
+            vocab: [
+                {q: "What is the synonym of 'Diligent'?", a: "Hardworking", t: "Apa persamaan kata 'Diligent' (Rajin)?", w: ["Lazy", "Slow", "Rude"]},
+                {q: "Translate to English: 'Saya siap bekerja'.", a: "I am ready to work", t: "Terjemahkan ke Inggris: 'Saya siap bekerja'.", w: ["I ready working", "I am ready work", "Me ready to work"]},
+                {q: "What is the antonym of 'Professional'?", a: "Amateur", t: "Apa lawan kata 'Professional'?", w: ["Expert", "Skilled", "Master"]},
+                {q: "Translate: 'Pengalaman Kerja'", a: "Work Experience", t: "Terjemahan: 'Pengalaman Kerja'", w: ["Work Job", "Job History", "Employment Life"]},
+                {q: "Synonym of 'Opportunity'?", a: "Chance", t: "Persamaan kata 'Opportunity' (Kesempatan)?", w: ["Loss", "Problem", "Time"]}
+            ],
+            grammar: [
+                {q: "I _______ (write) the application letter yesterday.", a: "wrote", t: "Saya ... (menulis) surat lamaran kemarin (Lampau).", w: ["written", "write", "writing"]},
+                {q: "She _______ (have) good communication skills.", a: "has", t: "Dia ... (punya) kemampuan komunikasi yang baik.", w: ["have", "had", "having"]},
+                {q: "We look forward to _______ (meet) you.", a: "meeting", t: "Kami menantikan untuk ... (bertemu) Anda.", w: ["meet", "met", "meets"]},
+                {q: "The email was _______ (send) by HR.", a: "sent", t: "Email itu ... (dikirim) oleh HR (Pasif).", w: ["send", "sending", "sended"]}
+            ],
+            interview: [
+                {q: "When asked 'Tell me about yourself', you should focus on:", a: "Professional Background", t: "Saat diminta 'Ceritakan dirimu', fokus pada...", w: ["Family History", "Hobbies only", "Personal Problems"]},
+                {q: "Best answer for 'What is your weakness?':", a: "Weakness + Solution", t: "Jawaban terbaik untuk 'Apa kelemahanmu?':", w: ["I have none", "I am lazy", "I work too hard"]},
+                {q: "What to do if you don't understand a question?", a: "Ask politely to repeat", t: "Apa yang dilakukan jika tidak paham pertanyaan?", w: ["Guess the answer", "Stay silent", "Leave room"]},
+                {q: "Body language: Eye contact should be...", a: "Natural & confident", t: "Bahasa tubuh: Kontak mata sebaiknya...", w: ["Staring intensely", "Looking at floor", "Closed eyes"]}
+            ],
+            essay_keys: [
+                {q: "Complete: 'Sincerely, _____' (Your Name)", a: "yours", t: "Lengkapi penutup surat: 'Sincerely, ...'", k: ["yours", "regards"]},
+                {q: "Translate: 'Lampiran' in email/letter.", a: "attachment", t: "Terjemahan 'Lampiran' di email.", k: ["attachment", "enclosure"]},
+                {q: "CV stands for Curriculum ...?", a: "vitae", t: "CV singkatan dari Curriculum ...?", k: ["vitae"]},
+                {q: "Past tense of 'Go'?", a: "went", t: "Bentuk lampau dari 'Go'?", k: ["went"]}
+            ]
+        };
+
+        // TOKO BARANG BOS
+        const shopItems = [
+            { id: 'acc-glasses', name: 'Smart Glasses', price: 50, icon: '👓' },
+            { id: 'acc-tie', name: 'Red Tie', price: 80, icon: '👔' },
+            { id: 'acc-bowtie', name: 'Bowtie', price: 100, icon: '🎀' },
+            { id: 'acc-cap', name: 'Cap', price: 120, icon: '🧢' },
+            { id: 'acc-grad', name: 'Grad Hat', price: 200, icon: '🎓' },
+            { id: 'acc-suit', name: 'Formal Suit', price: 150, icon: '💼' },
+            // BARANG BOS (MAHAL)
+            { id: 'acc-shades', name: 'Sunglasses', price: 250, icon: '🕶️' },
+            { id: 'acc-gold-tie', name: 'Golden Tie', price: 300, icon: '🎗️' },
+            { id: 'acc-boss-suit', name: 'Boss Suit', price: 500, icon: '🕴️' }
+        ];
+
+        let todoQueue = []; 
+        let totalInitialQuestions = 0;
+        let questionsAnswered = 0; // Untuk track level kesulitan
+        let sessionCoins = 0;
+        let streak = 0;
+
+        // --- CORE FUNCTIONS ---
+
+        function init() {
+            updateUI();
+            updateAvatar();
+            
+            let generated = [];
+            for(let i=0; i<40; i++) {
+                templates.vocab.forEach(t => generated.push({...t, type: 'mc', topic: 'Vocabulary'}));
+                templates.grammar.forEach(t => generated.push({...t, type: 'mc', topic: 'Grammar'}));
+                templates.interview.forEach(t => generated.push({...t, type: 'mc', topic: 'Interview'}));
+                templates.essay_keys.forEach(t => generated.push({
+                    q: t.q, a: t.a, t: t.t, keywords: t.k, type: 'essay', topic: 'Basic Knowledge'
+                }));
+            }
+            
+            todoQueue = generated.sort(() => Math.random() - 0.5).slice(0, 200); 
+            totalInitialQuestions = todoQueue.length;
+        }
+
+        function updateUI() {
+            document.getElementById('global-coins').innerText = coins;
+            document.getElementById('lobby-coins').innerText = coins;
+            document.getElementById('shop-coins').innerText = coins;
+            localStorage.setItem('im_coins', coins);
+        }
+
+        // --- GAMEPLAY ---
+
+        function startGame() {
+            init(); 
+            sessionCoins = 0;
+            streak = 0;
+            questionsAnswered = 0;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('game-container').classList.add('flex');
+            document.getElementById('streak-box').classList.remove('hidden');
+            
+            renderNextQuestion();
+        }
+
+        function backToLobby() {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('flex');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function renderNextQuestion() {
+            if (todoQueue.length === 0) {
+                endGame();
+                return;
+            }
+
+            const q = todoQueue[0];
+            
+            // Progress Logic
+            let pct = Math.max(0, ((totalInitialQuestions - todoQueue.length) / totalInitialQuestions) * 100);
+            if(todoQueue.length > totalInitialQuestions) pct = 5;
+            
+            document.getElementById('q-counter').innerText = `${questionsAnswered} / ${totalInitialQuestions}`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            
+            document.getElementById('topic-badge').innerText = q.topic;
+            document.getElementById('question-text').innerText = q.q;
+
+            // --- LOGIKA TRANSLATE MEMUDAR ---
+            const hintBox = document.getElementById('hint-box');
+            const hintText = document.getElementById('hint-text');
+            
+            hintBox.classList.remove('hidden', 'opacity-50'); // Reset
+            
+            let displayTranslate = q.t;
+
+            if (questionsAnswered <= 5) {
+                // LEVEL 1: Full Translate
+                hintText.innerText = displayTranslate;
+                hintText.className = "text-blue-800 font-medium";
+            } else if (questionsAnswered <= 15) {
+                // LEVEL 2: Partial (Hilangkan vokal)
+                let masked = displayTranslate.replace(/[aeiouAEIOU]/g, "_");
+                hintText.innerText = masked;
+                hintText.className = "text-slate-500 font-mono tracking-widest";
+            } else {
+                // LEVEL 3: No Translate
+                hintText.innerText = "(Terjemahan hilang di level ini. Semangat!)";
+                hintText.className = "text-red-400 italic text-xs";
+                hintBox.classList.add('opacity-50');
+            }
+
+            // Render Input Area
+            const area = document.getElementById('interaction-area');
+            area.innerHTML = '';
+            
+            if (q.type === 'essay') {
+                document.getElementById('type-badge').classList.remove('hidden');
+                
+                area.innerHTML = `
+                    <input type="text" id="essay-input" class="w-full p-4 rounded-xl border-2 border-slate-200 text-lg outline-none focus:border-indigo-500 transition shadow-sm" placeholder="Jawabanmu..." autocomplete="off">
+                    <button onclick="checkEssay()" class="btn-3d w-full mt-4 bg-indigo-500 text-white font-bold py-3 rounded-xl border-b-4 border-indigo-700">JAWAB</button>
+                `;
+                
+                setTimeout(() => {
+                    const input = document.getElementById('essay-input');
+                    if(input) {
+                        input.focus();
+                        input.addEventListener("keypress", (e) => { if(e.key==="Enter") checkEssay(); });
+                    }
+                }, 100);
+
+            } else {
+                document.getElementById('type-badge').classList.add('hidden');
+                
+                const grid = document.createElement('div');
+                grid.className = "flex flex-col gap-3";
+                
+                let opts = [...q.w, q.a].sort(() => Math.random() - 0.5);
+                
+                opts.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-option w-full text-left p-4 rounded-xl bg-white text-slate-700 font-bold text-lg";
+                    btn.innerText = opt;
+                    btn.onclick = (e) => checkMC(opt, q.a, e.target);
+                    grid.appendChild(btn);
+                });
+                area.appendChild(grid);
+            }
+
+            // Hide previous toast
+            const toast = document.getElementById('feedback-box');
+            toast.classList.remove('translate-y-0');
+            toast.classList.add('translate-y-full');
+            document.getElementById('feedback-area').classList.add('hidden');
+        }
+
+        // --- CHECKING LOGIC ---
+
+        function handleResult(isCorrect, correctAnswer) {
+            const toastArea = document.getElementById('feedback-area');
+            const toastBox = document.getElementById('feedback-box');
+            const title = document.getElementById('feedback-title');
+            const sub = document.getElementById('feedback-subtitle');
+            const icon = document.getElementById('feedback-icon');
+            const coinBadge = document.getElementById('feedback-coins');
+
+            toastArea.classList.remove('hidden');
+            void toastBox.offsetWidth;
+            toastBox.classList.remove('translate-y-full');
+            toastBox.classList.add('translate-y-0');
+
+            if (isCorrect) {
+                todoQueue.shift(); 
+                streak++;
+                questionsAnswered++; // Increment progress level
+                coins += 10;
+                sessionCoins += 10;
+                updateUI();
+
+                toastBox.className = "max-w-xl w-full bg-green-50 rounded-2xl shadow-2xl border-t-4 border-green-500 p-5 pointer-events-auto transform transition-all duration-300 translate-y-0";
+                icon.innerText = "🎉";
+                title.innerText = "Benar!";
+                title.className = "font-bold text-lg text-green-800";
+                sub.innerText = "Lanjut ke soal berikutnya!";
+                coinBadge.innerText = "+10";
+                coinBadge.classList.remove('hidden');
+
+                if(streak % 5 === 0) showStreakAnim();
+                showCoinAnim();
+
+            } else {
+                let wrongQ = todoQueue.shift(); 
+                todoQueue.push(wrongQ); 
+                streak = 0;
+
+                toastBox.className = "max-w-xl w-full bg-red-50 rounded-2xl shadow-2xl border-t-4 border-red-500 p-5 pointer-events-auto transform transition-all duration-300 translate-y-0";
+                icon.innerText = "❌";
+                title.innerText = "Kurang Tepat";
+                title.className = "font-bold text-lg text-red-800";
+                sub.innerText = `Jawaban: ${correctAnswer}`;
+                coinBadge.classList.add('hidden');
+            }
+            
+            document.getElementById('current-streak').innerText = streak;
+        }
+
+        function checkMC(selected, correct, btnElement) {
+            const btns = document.querySelectorAll('.btn-option');
+            btns.forEach(b => b.disabled = true);
+
+            if(selected === correct) {
+                btnElement.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+                handleResult(true, correct);
+            } else {
+                btnElement.classList.add('bg-red-100', 'border-red-400', 'text-red-800');
+                btns.forEach(b => {
+                    if(b.innerText === correct) b.classList.add('bg-green-50', 'border-green-200');
+                });
+                handleResult(false, correct);
+            }
+        }
+
+        function checkEssay() {
+            const input = document.getElementById('essay-input');
+            const val = input.value.trim().toLowerCase();
+            const q = todoQueue[0];
+            input.disabled = true;
+
+            const isCorrect = q.keywords.some(k => val.includes(k.toLowerCase()));
+            
+            if(isCorrect) {
+                input.classList.add('bg-green-50', 'border-green-400', 'text-green-800');
+                handleResult(true, q.a);
+            } else {
+                input.classList.add('bg-red-50', 'border-red-400', 'text-red-800');
+                handleResult(false, q.a);
+            }
+        }
+
+        function nextQuestion() {
+            const card = document.getElementById('interaction-area');
+            card.style.opacity = '0';
+            setTimeout(() => {
+                renderNextQuestion();
+                card.style.opacity = '1';
+            }, 200);
+        }
+
+        function endGame() {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('flex');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('session-coins').innerText = sessionCoins;
+        }
+
+        // --- SHOP & AVATAR SYSTEM ---
+        
+        function updateAvatar() {
+            const svg = document.getElementById('avatar-svg');
+            shopItems.forEach(item => {
+                const el = svg.getElementById(item.id);
+                if(el) el.classList.add('hidden-part');
+            });
+            Object.values(equipped).forEach(partId => {
+                const el = svg.getElementById(partId);
+                if(el) el.classList.remove('hidden-part');
+            });
+            localStorage.setItem('im_equipped', JSON.stringify(equipped));
+        }
+
+        function openShop() {
+            document.getElementById('shop-modal').classList.remove('hidden');
+            renderShop();
+        }
+        function closeShop() {
+            document.getElementById('shop-modal').classList.add('hidden');
+        }
+
+        function renderShop() {
+            const grid = document.getElementById('shop-grid');
+            grid.innerHTML = '';
+            
+            shopItems.forEach(item => {
+                const isOwned = inventory.includes(item.id);
+                const isEquipped = Object.values(equipped).includes(item.id);
+                
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition ${isEquipped ? 'bg-green-50 border-green-400' : 'bg-white border-slate-100'}`;
+                
+                let btnHtml;
+                if(isEquipped) {
+                    btnHtml = `<button onclick="toggleItem('${item.id}', '${item.id.split('-')[1]}')" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-lg font-bold">Lepas</button>`;
+                } else if(isOwned) {
+                    btnHtml = `<button onclick="toggleItem('${item.id}', '${item.id.split('-')[1]}')" class="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg font-bold">Pakai</button>`;
+                } else {
+                    const canBuy = coins >= item.price;
+                    btnHtml = `<button onclick="buyItem('${item.id}', ${item.price})" class="text-xs px-3 py-1 rounded-lg font-bold text-white ${canBuy ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-slate-300'}" ${!canBuy ? 'disabled':''}>Beli ${item.price}🪙</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="text-4xl bg-slate-50 w-16 h-16 flex items-center justify-center rounded-full mb-1">${item.icon}</div>
+                    <div class="font-bold text-slate-700 text-sm text-center leading-tight">${item.name}</div>
+                    ${btnHtml}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.buyItem = function(id, price) {
+            if(coins >= price) {
+                coins -= price;
+                inventory.push(id);
+                localStorage.setItem('im_inventory', JSON.stringify(inventory));
+                updateUI();
+                renderShop();
+            }
+        };
+
+        window.toggleItem = function(id, typeRaw) {
+            let type = 'misc';
+            if(id.includes('glasses') || id.includes('shades')) type = 'glasses';
+            else if(id.includes('tie') || id.includes('bowtie')) type = 'neck';
+            else if(id.includes('cap') || id.includes('grad')) type = 'hat';
+            else if(id.includes('suit')) type = 'shirt';
+
+            if(equipped[type] === id) {
+                delete equipped[type];
+            } else {
+                equipped[type] = id;
+            }
+            updateAvatar();
+            renderShop();
+        }
+
+        // --- ANIMATIONS ---
+        function showStreakAnim() {
+            const el = document.getElementById('streak-overlay');
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 1500);
+        }
+        function showCoinAnim() {
+            const container = document.getElementById('coin-anim-container');
+            const el = document.createElement('div');
+            el.className = "coin-float text-4xl font-black text-yellow-400 drop-shadow-md absolute top-1/2 left-1/2";
+            el.innerText = "+10🪙";
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        // INIT
+        init();
+    </script>
+</body>
+</html>
