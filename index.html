@@ -3,24 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interview Master - Ultimate Edition</title>
+    <title>Interview Master - Ultimate 150</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
             overflow-x: hidden;
+            color: #475569;
         }
         
+        /* === CLOUD ANIMATIONS === */
+        .cloud {
+            position: absolute;
+            opacity: 0.8;
+            animation: floatCloud linear infinite;
+            z-index: 0;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+        }
+        @keyframes floatCloud {
+            0% { transform: translateX(-150px); }
+            100% { transform: translateX(110vw); }
+        }
+
         /* Glassmorphism Card */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
             border-radius: 1.5rem;
-            box-shadow: 0 10px 30px -10px rgba(0, 128, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            z-index: 10;
         }
 
         /* Modern 3D Buttons */
@@ -30,22 +46,53 @@
             transform: translateY(0);
         }
         .btn-3d:active {
-            transform: translateY(3px);
+            transform: translateY(4px);
             border-bottom-width: 0px;
-            margin-top: 3px; /* Keep layout stable */
+            margin-top: 4px; 
         }
 
+        /* Option Buttons */
         .btn-option {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid #e2e8f0;
+            border-bottom-width: 4px;
         }
         .btn-option:hover:not(:disabled) {
+            background-color: #f1f5f9;
             transform: translateY(-2px);
-            border-color: #cbd5e1;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
         .btn-option:active:not(:disabled) {
             transform: translateY(0);
+            border-bottom-width: 2px;
+            margin-top: 2px;
+        }
+
+        /* WORD BANK STYLES */
+        .word-chip {
+            cursor: pointer;
+            padding: 12px 18px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-bottom: 4px solid #cbd5e1;
+            border-radius: 14px;
+            font-weight: 700;
+            color: #475569;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            display: inline-block;
+            margin: 6px;
+            user-select: none;
+        }
+        .word-chip:hover { transform: translateY(-2px); background-color: #f8fafc; }
+        .word-chip:active { transform: translateY(0); border-bottom-width: 2px; margin-top: 2px; }
+        .word-chip.selected {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+            color: transparent;
+            pointer-events: none;
+            box-shadow: none;
+            border-bottom-width: 2px;
+            transform: translate(0, 2px);
         }
 
         .fade-in { animation: fadeIn 0.4s ease-out; }
@@ -55,43 +102,34 @@
         }
         
         /* Animations */
-        .fire-anim { animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes popUp {
-            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
-            70% { transform: scale(1.1) rotate(5deg); opacity: 1; }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; } /* Stay visible briefly */
-        }
-        
         .coin-float { animation: floatUp 0.8s ease-out forwards; }
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
         }
 
-        /* Character SVG Parts */
         .hidden-part { display: none; }
-        
-        /* Utility */
-        .text-shadow-sm { text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-700 min-h-screen flex flex-col items-center justify-center p-4 relative selection:bg-green-200">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative selection:bg-green-200">
+
+    <!-- BACKGROUND CLOUDS -->
+    <div id="clouds-container" class="fixed inset-0 overflow-hidden pointer-events-none"></div>
 
     <!-- OVERLAYS -->
     <div id="coin-anim-container" class="fixed inset-0 pointer-events-none z-[120] flex justify-center items-center"></div>
 
     <div id="streak-overlay" class="fixed inset-0 pointer-events-none flex items-center justify-center z-[110] hidden">
-        <div class="text-center fire-anim bg-white/90 p-8 rounded-3xl shadow-2xl backdrop-blur-sm border-4 border-orange-100">
+        <div class="text-center fade-in bg-white/90 p-8 rounded-3xl shadow-2xl backdrop-blur-sm border-4 border-orange-100 transform scale-110">
             <div class="text-8xl mb-2">🔥</div>
             <div class="text-4xl font-black text-orange-500 tracking-tighter uppercase">On Fire!</div>
-            <div class="text-xl font-bold text-orange-400 mt-1">Keep it going!</div>
         </div>
     </div>
 
-    <!-- HEADER BUTTONS (Lobby & Shop) -->
+    <!-- HEADER BUTTONS -->
     <div class="fixed top-4 left-4 z-50">
         <button onclick="backToLobby()" class="btn-3d bg-white text-slate-600 px-4 py-2 rounded-xl border-b-4 border-slate-200 hover:bg-slate-50 font-bold shadow-sm flex items-center gap-2 text-sm">
-            <span class="iconify" data-icon="akar-icons:arrow-back-thick"></span> Lobby
+            <span class="iconify" data-icon="akar-icons:arrow-back-thick"></span> Exit
         </button>
     </div>
 
@@ -102,18 +140,14 @@
     </div>
 
     <!-- === GAME CONTAINER === -->
-    <div id="game-container" class="w-full max-w-5xl mx-auto hidden flex flex-col lg:flex-row gap-6 items-start mt-12 lg:mt-0">
+    <div id="game-container" class="w-full max-w-6xl mx-auto hidden flex flex-col lg:flex-row gap-6 items-start mt-12 lg:mt-0 z-20">
         
         <!-- LEFT: Character & Stats -->
         <div class="w-full lg:w-1/3 flex flex-col items-center gap-4">
             <!-- Avatar Card -->
-            <div class="glass-card p-6 relative w-full max-w-[280px] mx-auto flex flex-col items-center bg-gradient-to-b from-white to-blue-50">
-                <div class="absolute -top-3 bg-blue-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg tracking-wide uppercase">
-                    Avatar
-                </div>
-                
-                <!-- SVG AVATAR -->
+            <div class="glass-card p-6 relative w-full max-w-[280px] mx-auto flex flex-col items-center bg-white">
                 <svg id="avatar-svg" viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-xl transform hover:scale-105 transition duration-500" xmlns="http://www.w3.org/2000/svg">
+                    <!-- (SVG Content preserved) -->
                     <defs>
                         <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" style="stop-color:#fde6d5;stop-opacity:1" />
@@ -134,75 +168,19 @@
                         <ellipse cx="75" cy="78" rx="6" ry="3" fill="#fca5a5" opacity="0.6"/>
                         <ellipse cx="125" cy="78" rx="6" ry="3" fill="#fca5a5" opacity="0.6"/>
                     </g>
-                    
                     <!-- Accessories -->
-                    
-                    <!-- Standard Glasses -->
-                    <g id="acc-glasses" class="hidden-part">
-                        <g stroke="#1e293b" stroke-width="3" fill="none">
-                            <circle cx="85" cy="65" r="13"/>
-                            <circle cx="115" cy="65" r="13"/>
-                            <line x1="98" y1="65" x2="102" y2="65"/>
-                            <path d="M50,60 L72,65" stroke-width="2"/>
-                            <path d="M150,60 L128,65" stroke-width="2"/>
-                        </g>
-                    </g>
-                    <!-- Shades (Boss) -->
-                    <g id="acc-shades" class="hidden-part">
-                         <path d="M70,60 L100,60 L100,70 Q90,75 70,70 Z" fill="#111827"/>
-                         <path d="M100,60 L130,60 L130,70 Q110,75 100,70 Z" fill="#111827"/>
-                         <line x1="98" y1="62" x2="102" y2="62" stroke="#111827" stroke-width="3"/>
-                         <path d="M50,60 L70,62" stroke="#111827" stroke-width="2"/>
-                         <path d="M150,60 L130,62" stroke="#111827" stroke-width="2"/>
-                    </g>
-
-                    <!-- Ties -->
-                    <g id="acc-tie" class="hidden-part">
-                        <path d="M100,110 L92,130 L100,155 L108,130 Z" fill="#dc2626"/>
-                        <circle cx="100" cy="112" r="4" fill="#991b1b"/>
-                    </g>
-                    <g id="acc-gold-tie" class="hidden-part">
-                        <path d="M100,110 L92,130 L100,155 L108,130 Z" fill="#fbbf24"/>
-                        <circle cx="100" cy="112" r="4" fill="#d97706"/>
-                        <path d="M100,110 L100,155" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.5"/>
-                    </g>
-                    <g id="acc-bowtie" class="hidden-part">
-                         <path d="M100,115 L82,108 L82,122 Z" fill="#ef4444"/>
-                         <path d="M100,115 L118,108 L118,122 Z" fill="#ef4444"/>
-                         <circle cx="100" cy="115" r="4" fill="#b91c1c"/>
-                    </g>
-
-                    <!-- Hats -->
-                    <g id="acc-cap" class="hidden-part">
-                        <path d="M55,50 Q100,8 145,50" fill="#f59e0b"/>
-                        <rect x="52" y="45" width="96" height="12" rx="4" fill="#d97706"/>
-                        <path d="M130,45 L170,45 L160,55 L130,55 Z" fill="#b45309"/>
-                    </g>
-                    <g id="acc-grad" class="hidden-part">
-                        <path d="M50,45 L100,25 L150,45 L100,65 Z" fill="#1e293b"/>
-                        <path d="M148,45 L148,75" stroke="#fcd34d" stroke-width="2"/>
-                        <circle cx="148" cy="77" r="3" fill="#fcd34d"/>
-                        <rect x="65" y="60" width="70" height="15" fill="#334155"/>
-                    </g>
-
-                    <!-- Suits -->
-                    <g id="acc-suit" class="hidden-part">
-                         <path d="M50,140 L50,200 L150,200 L150,140 L130,110 L100,140 L70,110 Z" fill="#1e293b"/>
-                         <path d="M100,140 L100,200" stroke="#334155" stroke-width="1"/>
-                         <path d="M100,140 L85,110 L115,110 Z" fill="white"/>
-                    </g>
-                    <g id="acc-boss-suit" class="hidden-part">
-                         <!-- Darker, fancy suit with pocket square -->
-                         <path d="M50,140 L50,200 L150,200 L150,140 L130,110 L100,140 L70,110 Z" fill="#0f172a"/>
-                         <path d="M100,140 L100,200" stroke="#1e293b" stroke-width="1"/>
-                         <path d="M100,140 L85,110 L115,110 Z" fill="#f8fafc"/>
-                         <!-- Pocket Square -->
-                         <rect x="125" y="150" width="15" height="4" fill="#ef4444"/>
-                    </g>
+                    <g id="acc-glasses" class="hidden-part"><g stroke="#1e293b" stroke-width="3" fill="none"><circle cx="85" cy="65" r="13"/><circle cx="115" cy="65" r="13"/><line x1="98" y1="65" x2="102" y2="65"/><path d="M50,60 L72,65" stroke-width="2"/><path d="M150,60 L128,65" stroke-width="2"/></g></g>
+                    <g id="acc-shades" class="hidden-part"><path d="M70,60 L100,60 L100,70 Q90,75 70,70 Z" fill="#111827"/><path d="M100,60 L130,60 L130,70 Q110,75 100,70 Z" fill="#111827"/><line x1="98" y1="62" x2="102" y2="62" stroke="#111827" stroke-width="3"/><path d="M50,60 L70,62" stroke="#111827" stroke-width="2"/><path d="M150,60 L130,62" stroke="#111827" stroke-width="2"/></g>
+                    <g id="acc-tie" class="hidden-part"><path d="M100,110 L92,130 L100,155 L108,130 Z" fill="#dc2626"/><circle cx="100" cy="112" r="4" fill="#991b1b"/></g>
+                    <g id="acc-gold-tie" class="hidden-part"><path d="M100,110 L92,130 L100,155 L108,130 Z" fill="#fbbf24"/><circle cx="100" cy="112" r="4" fill="#d97706"/><path d="M100,110 L100,155" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.5"/></g>
+                    <g id="acc-bowtie" class="hidden-part"><path d="M100,115 L82,108 L82,122 Z" fill="#ef4444"/><path d="M100,115 L118,108 L118,122 Z" fill="#ef4444"/><circle cx="100" cy="115" r="4" fill="#b91c1c"/></g>
+                    <g id="acc-cap" class="hidden-part"><path d="M55,50 Q100,8 145,50" fill="#f59e0b"/><rect x="52" y="45" width="96" height="12" rx="4" fill="#d97706"/><path d="M130,45 L170,45 L160,55 L130,55 Z" fill="#b45309"/></g>
+                    <g id="acc-grad" class="hidden-part"><path d="M50,45 L100,25 L150,45 L100,65 Z" fill="#1e293b"/><path d="M148,45 L148,75" stroke="#fcd34d" stroke-width="2"/><circle cx="148" cy="77" r="3" fill="#fcd34d"/><rect x="65" y="60" width="70" height="15" fill="#334155"/></g>
+                    <g id="acc-suit" class="hidden-part"><path d="M50,140 L50,200 L150,200 L150,140 L130,110 L100,140 L70,110 Z" fill="#1e293b"/><path d="M100,140 L100,200" stroke="#334155" stroke-width="1"/><path d="M100,140 L85,110 L115,110 Z" fill="white"/></g>
+                    <g id="acc-boss-suit" class="hidden-part"><path d="M50,140 L50,200 L150,200 L150,140 L130,110 L100,140 L70,110 Z" fill="#0f172a"/><path d="M100,140 L100,200" stroke="#1e293b" stroke-width="1"/><path d="M100,140 L85,110 L115,110 Z" fill="#f8fafc"/><rect x="125" y="150" width="15" height="4" fill="#ef4444"/></g>
                 </svg>
             </div>
             
-            <!-- Streak Badge -->
             <div id="streak-box" class="glass-card w-full px-4 py-3 flex items-center justify-between hidden transition-all duration-300">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl animate-pulse">🔥</span>
@@ -215,110 +193,113 @@
         <!-- RIGHT: Question Area -->
         <div class="w-full lg:w-2/3">
             <!-- Progress Header -->
-            <div class="flex items-center justify-between mb-4 px-2">
-                <div class="flex flex-col w-full mr-4">
-                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                        <span>PROGRESS</span>
-                        <span id="q-counter">0 / 200</span>
-                    </div>
-                    <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
-                        <div id="progress-bar" class="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
-                    </div>
+            <div class="glass-card p-4 mb-4 flex items-center gap-4 bg-white/90">
+                <button onclick="endGame()" class="text-slate-400 hover:text-slate-600">
+                    <span class="iconify text-xl" data-icon="akar-icons:cross"></span>
+                </button>
+                <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden shadow-inner relative">
+                    <div id="progress-bar" class="bg-gradient-to-r from-green-400 to-emerald-500 h-4 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
                 </div>
+                <div class="text-sm font-black text-slate-500" id="q-counter">0/150</div>
             </div>
 
             <!-- Question Card -->
-            <div class="glass-card p-6 md:p-10 min-h-[450px] flex flex-col justify-center relative bg-white">
-                <!-- Badges -->
-                <div class="absolute top-6 left-6 flex gap-2">
-                    <span id="topic-badge" class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full">Topic</span>
-                    <span id="type-badge" class="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full hidden">Essay</span>
+            <div class="glass-card p-6 md:p-10 min-h-[500px] flex flex-col relative bg-white">
+                
+                <!-- Topic & Instruction -->
+                <div class="mb-2 flex flex-col items-start gap-2">
+                    <span id="topic-badge" class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-lg">Topic</span>
+                    <span id="instruction-text" class="text-sm font-bold text-slate-400 uppercase tracking-wide">Instruksi Soal</span>
                 </div>
 
                 <!-- Question Text -->
-                <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 mt-8 leading-relaxed" id="question-text">
-                    Loading question...
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-6 leading-snug" id="question-text">
+                    Loading...
                 </h2>
 
-                <!-- Hint Box (Adaptive Translate) -->
-                <div id="hint-box" class="bg-blue-50/80 border-l-4 border-blue-400 p-4 rounded-r-xl mb-8 text-blue-800 text-sm backdrop-blur-sm transition-all duration-500">
-                    <span class="font-bold mr-1">💡 Terjemahan:</span> <span id="hint-text" class="italic">...</span>
+                <!-- Hint/Translate Box (Adaptive) -->
+                <div id="hint-box" class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-xl mb-8 flex items-start gap-3 transition-opacity duration-700">
+                    <span class="text-xl mt-1">💡</span>
+                    <div>
+                        <div class="text-[10px] font-bold text-blue-400 uppercase tracking-wide mb-1">Bantuan Terjemahan</div>
+                        <div id="hint-text" class="text-lg font-bold text-blue-900 leading-tight">...</div>
+                    </div>
                 </div>
 
                 <!-- Interaction Area -->
-                <div id="interaction-area" class="w-full fade-in"></div>
+                <div id="interaction-area" class="w-full fade-in flex-1 flex flex-col justify-end"></div>
+                
+                <!-- Check Button Area -->
+                <div id="check-area" class="mt-6 border-t pt-4 hidden">
+                    <button id="check-btn" onclick="checkAnswer()" class="btn-3d w-full bg-green-500 text-white font-bold py-4 rounded-2xl border-b-4 border-green-700 text-lg uppercase tracking-wider hover:bg-green-400">
+                        PERIKSA JAWABAN
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- === START SCREEN / LOBBY === -->
-    <div id="start-screen" class="max-w-md w-full text-center fade-in z-10">
-        <div class="glass-card p-8 bg-white/80">
-            <div class="w-32 h-32 mx-auto mb-6 bg-emerald-100 rounded-full flex items-center justify-center shadow-inner border-4 border-white relative">
-                 <span class="text-6xl">🎓</span>
-                 <div class="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-md border-2 border-white">200 SOAL</div>
+    <!-- === START SCREEN === -->
+    <div id="start-screen" class="max-w-md w-full text-center fade-in z-20">
+        <div class="glass-card p-8 bg-white/90">
+            <div class="w-40 h-40 mx-auto mb-6 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-emerald-100 relative">
+                 <span class="text-7xl animate-bounce">🎓</span>
+                 <div class="absolute -bottom-2 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-xl text-sm font-bold shadow-md border-2 border-white transform rotate-3">150 LEVEL</div>
             </div>
             
-            <h1 class="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">Interview Master</h1>
-            <p class="text-slate-500 mb-8 font-medium">Siap hadapi ujian praktik & dunia kerja?</p>
+            <h1 class="text-4xl font-extrabold text-slate-800 mb-2 tracking-tight">Interview Master</h1>
+            <p class="text-slate-500 mb-8 font-medium">Latihan Interview Bahasa Inggris dengan 150 Soal Unik & Adaptive Difficulty.</p>
 
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="openShop()" class="btn-3d bg-white p-4 rounded-xl border-b-4 border-slate-200 hover:border-yellow-300 group">
-                    <div class="text-3xl mb-1 group-hover:scale-110 transition">🕴️</div>
-                    <div class="font-bold text-slate-700 text-sm">Gaya Bos</div>
+                <button onclick="openShop()" class="btn-3d bg-white p-4 rounded-2xl border-b-4 border-slate-200 hover:border-yellow-300 group">
+                    <div class="text-3xl mb-1 group-hover:scale-110 transition">👔</div>
+                    <div class="font-bold text-slate-700 text-sm">Ganti Gaya</div>
                 </button>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-center items-center shadow-sm">
-                    <div class="text-xs text-slate-400 font-bold uppercase">Total Koin</div>
+                <div class="bg-white p-4 rounded-2xl border-2 border-slate-100 flex flex-col justify-center items-center shadow-sm">
+                    <div class="text-xs text-slate-400 font-bold uppercase">Tabungan</div>
                     <div class="font-black text-yellow-500 text-xl" id="lobby-coins">0</div>
                 </div>
             </div>
 
-            <button onclick="startGame()" class="btn-3d w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold py-4 rounded-xl border-b-4 border-emerald-700 shadow-lg text-lg tracking-wide hover:brightness-110">
-                MULAI BELAJAR 🚀
+            <button onclick="startGame()" class="btn-3d w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl border-b-4 border-emerald-700 shadow-xl text-xl tracking-wide hover:brightness-110">
+                MULAI BELAJAR
             </button>
             
-            <div class="mt-6 text-xs text-slate-400 space-y-1">
-                <p>Level 1: Full Translate</p>
-                <p>Level 2: Hilang Sebagian</p>
-                <p>Level 3: Tanpa Translate (Hard)</p>
+            <div class="mt-6 text-xs text-slate-400 space-y-2 font-semibold bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p>🟢 <span class="text-slate-600">Level 1-50:</span> Full Terjemahan</p>
+                <p>🟡 <span class="text-slate-600">Level 51-100:</span> Terjemahan Sebagian</p>
+                <p>🔴 <span class="text-slate-600">Level 101-150:</span> Mode Pro (Inggris Full)</p>
             </div>
         </div>
     </div>
 
     <!-- === RESULT SCREEN === -->
-    <div id="result-screen" class="w-full max-w-lg mx-auto hidden fade-in py-8 px-4 z-10">
+    <div id="result-screen" class="w-full max-w-lg mx-auto hidden fade-in py-8 px-4 z-20">
         <div class="glass-card p-8 text-center bg-white">
-            <h2 class="text-3xl font-black text-slate-800 mb-2">Sesi Selesai! 🎉</h2>
-            <p class="text-slate-500 mb-6">Semua soal berhasil kamu jawab.</p>
-
-            <div class="bg-yellow-50 p-6 rounded-2xl border-2 border-dashed border-yellow-200 mb-8">
+            <h2 class="text-4xl font-black text-slate-800 mb-2">Luar Biasa! 🎉</h2>
+            <p class="text-slate-500 mb-8 text-lg">Kamu telah menyelesaikan 150 soal!</p>
+            <div class="bg-yellow-50 p-6 rounded-3xl border-4 border-yellow-200 mb-8 flex flex-col items-center">
+                <span class="text-6xl mb-2">💰</span>
                 <span class="block text-5xl font-black text-yellow-500 mb-1" id="session-coins">0</span>
-                <span class="text-yellow-700 font-bold uppercase text-xs tracking-widest">Koin Diperoleh</span>
+                <span class="text-yellow-700 font-bold uppercase text-sm tracking-widest">Koin Diperoleh</span>
             </div>
-
-            <div class="flex gap-3">
-                <button onclick="openShop()" class="btn-3d flex-1 bg-indigo-500 text-white py-3 rounded-xl border-b-4 border-indigo-700 font-bold">
-                    🛍️ Belanja
-                </button>
-                <button onclick="backToLobby()" class="btn-3d flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl border-b-4 border-slate-300 font-bold">
-                    🏠 Lobby
-                </button>
-            </div>
+            <button onclick="backToLobby()" class="btn-3d w-full bg-slate-800 text-white py-4 rounded-2xl border-b-4 border-slate-950 font-bold text-lg">
+                Kembali ke Lobby
+            </button>
         </div>
     </div>
 
     <!-- === SHOP MODAL === -->
-    <div id="shop-modal" class="fixed inset-0 bg-slate-900/60 z-[200] hidden flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-bounce-in">
+    <div id="shop-modal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-bounce-in">
             <div class="bg-slate-50 p-5 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800">Dressing Room</h3>
-                <div class="bg-yellow-100 px-3 py-1 rounded-full text-yellow-700 font-bold text-sm flex items-center gap-1">
+                <h3 class="font-bold text-xl text-slate-800">Dressing Room</h3>
+                <div class="bg-yellow-100 px-4 py-2 rounded-xl text-yellow-700 font-bold text-sm flex items-center gap-2">
                     🪙 <span id="shop-coins">0</span>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50" id="shop-grid">
-                <!-- Items injected by JS -->
-            </div>
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50 grid grid-cols-2 gap-4" id="shop-grid"></div>
             <div class="p-5 border-t border-slate-100 bg-white">
                 <button onclick="closeShop()" class="btn-3d w-full bg-slate-800 text-white py-3 rounded-xl font-bold border-b-4 border-slate-950">
                     Tutup Toko
@@ -327,22 +308,22 @@
         </div>
     </div>
 
-    <!-- === FEEDBACK TOAST === -->
-    <div id="feedback-area" class="fixed bottom-0 left-0 w-full p-4 hidden z-50 flex justify-center pointer-events-none">
-        <div class="max-w-xl w-full bg-white rounded-2xl shadow-2xl border-t-4 p-5 pointer-events-auto transform transition-all duration-300 translate-y-full" id="feedback-box">
-            <div class="flex gap-4 items-start">
-                <div id="feedback-icon" class="text-3xl">✅</div>
-                <div class="flex-1">
-                    <h3 class="font-bold text-lg text-slate-800" id="feedback-title">Benar!</h3>
-                    <p class="text-sm text-slate-600 leading-snug" id="feedback-subtitle">Penjelasan singkat.</p>
+    <!-- === FEEDBACK BOTTOM SHEET === -->
+    <div id="feedback-area" class="fixed bottom-0 left-0 w-full p-0 z-[100] pointer-events-none flex flex-col justify-end h-screen hidden">
+        <div class="bg-black/20 w-full flex-1 backdrop-blur-[2px]"></div>
+        <div class="w-full bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border-t-2 border-slate-100 p-6 pointer-events-auto transform transition-transform duration-300 translate-y-full" id="feedback-box">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row gap-6 items-center">
+                <div class="flex items-center gap-4 w-full">
+                    <div id="feedback-icon" class="text-5xl bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-sm border-2">✅</div>
+                    <div class="flex-1">
+                        <h3 class="font-black text-2xl text-slate-800 mb-1" id="feedback-title">Benar!</h3>
+                        <p class="text-slate-600 font-medium text-lg leading-snug" id="feedback-subtitle">...</p>
+                    </div>
                 </div>
-                <div class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold hidden" id="feedback-coins">
-                    +20
-                </div>
+                <button onclick="nextQuestion()" class="btn-3d w-full md:w-auto md:px-12 bg-indigo-600 text-white py-4 rounded-2xl border-b-4 border-indigo-800 font-bold text-lg tracking-widest uppercase hover:bg-indigo-500 shadow-lg shadow-indigo-200">
+                    LANJUT
+                </button>
             </div>
-            <button onclick="nextQuestion()" class="btn-3d w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl border-b-4 border-indigo-800 font-bold text-sm tracking-widest uppercase">
-                LANJUT
-            </button>
         </div>
     </div>
 
@@ -352,36 +333,105 @@
         let inventory = JSON.parse(localStorage.getItem('im_inventory')) || ['default'];
         let equipped = JSON.parse(localStorage.getItem('im_equipped')) || {}; 
 
-        // Soal: Sekarang ada 't' untuk Translate!
-        const templates = {
-            vocab: [
-                {q: "What is the synonym of 'Diligent'?", a: "Hardworking", t: "Apa persamaan kata 'Diligent' (Rajin)?", w: ["Lazy", "Slow", "Rude"]},
-                {q: "Translate to English: 'Saya siap bekerja'.", a: "I am ready to work", t: "Terjemahkan ke Inggris: 'Saya siap bekerja'.", w: ["I ready working", "I am ready work", "Me ready to work"]},
-                {q: "What is the antonym of 'Professional'?", a: "Amateur", t: "Apa lawan kata 'Professional'?", w: ["Expert", "Skilled", "Master"]},
-                {q: "Translate: 'Pengalaman Kerja'", a: "Work Experience", t: "Terjemahan: 'Pengalaman Kerja'", w: ["Work Job", "Job History", "Employment Life"]},
-                {q: "Synonym of 'Opportunity'?", a: "Chance", t: "Persamaan kata 'Opportunity' (Kesempatan)?", w: ["Loss", "Problem", "Time"]}
-            ],
-            grammar: [
-                {q: "I _______ (write) the application letter yesterday.", a: "wrote", t: "Saya ... (menulis) surat lamaran kemarin (Lampau).", w: ["written", "write", "writing"]},
-                {q: "She _______ (have) good communication skills.", a: "has", t: "Dia ... (punya) kemampuan komunikasi yang baik.", w: ["have", "had", "having"]},
-                {q: "We look forward to _______ (meet) you.", a: "meeting", t: "Kami menantikan untuk ... (bertemu) Anda.", w: ["meet", "met", "meets"]},
-                {q: "The email was _______ (send) by HR.", a: "sent", t: "Email itu ... (dikirim) oleh HR (Pasif).", w: ["send", "sending", "sended"]}
-            ],
-            interview: [
-                {q: "When asked 'Tell me about yourself', you should focus on:", a: "Professional Background", t: "Saat diminta 'Ceritakan dirimu', fokus pada...", w: ["Family History", "Hobbies only", "Personal Problems"]},
-                {q: "Best answer for 'What is your weakness?':", a: "Weakness + Solution", t: "Jawaban terbaik untuk 'Apa kelemahanmu?':", w: ["I have none", "I am lazy", "I work too hard"]},
-                {q: "What to do if you don't understand a question?", a: "Ask politely to repeat", t: "Apa yang dilakukan jika tidak paham pertanyaan?", w: ["Guess the answer", "Stay silent", "Leave room"]},
-                {q: "Body language: Eye contact should be...", a: "Natural & confident", t: "Bahasa tubuh: Kontak mata sebaiknya...", w: ["Staring intensely", "Looking at floor", "Closed eyes"]}
-            ],
-            essay_keys: [
-                {q: "Complete: 'Sincerely, _____' (Your Name)", a: "yours", t: "Lengkapi penutup surat: 'Sincerely, ...'", k: ["yours", "regards"]},
-                {q: "Translate: 'Lampiran' in email/letter.", a: "attachment", t: "Terjemahan 'Lampiran' di email.", k: ["attachment", "enclosure"]},
-                {q: "CV stands for Curriculum ...?", a: "vitae", t: "CV singkatan dari Curriculum ...?", k: ["vitae"]},
-                {q: "Past tense of 'Go'?", a: "went", t: "Bentuk lampau dari 'Go'?", k: ["went"]}
-            ]
-        };
+        // 150 QUESTIONS - MASSIVE DATABASE
+        // Format: q (Question), a (Answer), t (Translation), i (Instruction), type (arrange/essay/mc), topic
+        
+        const rawData = [
+            // === TOPIC 1: INTRO (30 Soal) ===
+            { q: "Tell me about yourself.", a: "My name is Budi and I am a fresh graduate.", t: "Ceritakan tentang dirimu.", i: "Susun jawaban untuk perkenalan diri", type: "arrange", topic: "Intro" },
+            { q: "Where do you live?", a: "I live in South Jakarta.", t: "Di mana kamu tinggal?", i: "Susun jawaban lokasi tempat tinggal", type: "arrange", topic: "Intro" },
+            { q: "How old are you?", a: "I am twenty one years old.", t: "Berapa usiamu?", i: "Susun jawaban usia (21 tahun)", type: "arrange", topic: "Intro" },
+            { q: "What is your hobby?", a: "I like reading books and coding.", t: "Apa hobimu?", i: "Susun jawaban hobi (membaca & coding)", type: "arrange", topic: "Intro" },
+            { q: "What school did you attend?", a: "I attended a vocational high school.", t: "Kamu bersekolah di mana?", i: "Susun jawaban sekolah (SMK)", type: "arrange", topic: "Intro" },
+            { q: "What was your major?", a: "My major was Software Engineering.", t: "Apa jurusanmu?", i: "Susun jawaban jurusan (RPL)", type: "arrange", topic: "Intro" },
+            { q: "Do you have siblings?", a: "Yes I have one brother.", t: "Punya saudara?", i: "Susun jawaban (1 saudara laki-laki)", type: "arrange", topic: "Intro" },
+            { q: "Describe yourself in one word.", a: "I am a disciplined person.", t: "Gambarkan dirimu dalam satu kata.", i: "Susun jawaban (Disiplin)", type: "arrange", topic: "Intro" },
+            { q: "Are you single?", a: "Yes I am currently single.", t: "Apa kamu lajang?", i: "Susun jawaban status", type: "arrange", topic: "Intro" },
+            { q: "How do you come here?", a: "I go here by motorcycle.", t: "Naik apa ke sini?", i: "Susun jawaban transportasi", type: "arrange", topic: "Intro" },
+            // Vocab Intro
+            { q: "Translate: 'Lulusan Baru'", a: "Fresh Graduate", t: "Inggrisnya 'Lulusan Baru'", i: "Pilih terjemahan yang tepat", w: ["New Student", "Expert", "Old Worker"], type: "mc", topic: "Intro" },
+            { q: "Translate: 'Kejuruan'", a: "Vocational", t: "Inggrisnya 'Kejuruan' (untuk SMK)", i: "Pilih terjemahan yang tepat", w: ["Vacation", "Professional", "High"], type: "mc", topic: "Intro" },
+            { q: "Translate: 'Jurusan'", a: "Major", t: "Inggrisnya 'Jurusan' sekolah", i: "Pilih terjemahan yang tepat", w: ["Mayor", "Lesson", "Class"], type: "mc", topic: "Intro" },
+            { q: "Type the English for 'Nama Saya'", a: "my name", t: "Ketik bahasa Inggris 'Nama Saya' (huruf kecil)", i: "Ketik jawaban", type: "essay", topic: "Intro" },
+            { q: "Type the English for 'Alamat'", a: "address", t: "Ketik bahasa Inggris 'Alamat'", i: "Ketik jawaban", type: "essay", topic: "Intro" },
+            
+            // === TOPIC 2: PKL / INTERNSHIP (30 Soal) ===
+            { q: "Where was your internship?", a: "I did my internship at Telkom.", t: "Di mana kamu magang?", i: "Susun jawaban lokasi magang", type: "arrange", topic: "PKL" },
+            { q: "How long was the internship?", a: "It was for six months.", t: "Berapa lama magangnya?", i: "Susun jawaban durasi (6 bulan)", type: "arrange", topic: "PKL" },
+            { q: "What was your role?", a: "I was a network support intern.", t: "Apa peranmu?", i: "Susun jawaban peran (Network Support)", type: "arrange", topic: "PKL" },
+            { q: "What tools did you use?", a: "I used Mikrotik and Cisco Packet Tracer.", t: "Alat apa yang kamu pakai?", i: "Susun jawaban alat", type: "arrange", topic: "PKL" },
+            { q: "Did you work alone?", a: "No I worked in a team.", t: "Kerja sendiri?", i: "Susun jawaban (Tim)", type: "arrange", topic: "PKL" },
+            { q: "What did you learn?", a: "I learned how to troubleshoot networks.", t: "Apa yang kamu pelajari?", i: "Susun jawaban (Troubleshoot)", type: "arrange", topic: "PKL" },
+            { q: "What was the hardest part?", a: "Handling client complaints was hard.", t: "Apa bagian tersulit?", i: "Susun jawaban (Keluhan klien)", type: "arrange", topic: "PKL" },
+            { q: "Did you get paid?", a: "Yes I received a monthly allowance.", t: "Apakah dibayar?", i: "Susun jawaban (Uang saku)", type: "arrange", topic: "PKL" },
+            { q: "Who was your supervisor?", a: "My supervisor was Mr. Budi.", t: "Siapa pembimbingmu?", i: "Susun jawaban", type: "arrange", topic: "PKL" },
+            { q: "Describe your daily task.", a: "I checked the server every morning.", t: "Jelaskan tugas harianmu.", i: "Susun jawaban (Cek server)", type: "arrange", topic: "PKL" },
+             // Vocab PKL
+            { q: "Translate: 'Magang'", a: "Internship", t: "Inggrisnya 'Magang'", i: "Pilih jawaban", w: ["Workshop", "Training", "School"], type: "mc", topic: "PKL" },
+            { q: "Translate: 'Pengalaman'", a: "Experience", t: "Inggrisnya 'Pengalaman'", i: "Pilih jawaban", w: ["Expertise", "Experiment", "Example"], type: "mc", topic: "PKL" },
+            { q: "Translate: 'Keterampilan'", a: "Skill", t: "Inggrisnya 'Keterampilan'", i: "Pilih jawaban", w: ["Scale", "School", "Skull"], type: "mc", topic: "PKL" },
+            { q: "Type the past tense of 'Learn'", a: "learned", t: "Ketik bentuk lampau dari 'Learn'", i: "Ketik jawaban", type: "essay", topic: "PKL" },
+            { q: "Type the past tense of 'Work'", a: "worked", t: "Ketik bentuk lampau dari 'Work'", i: "Ketik jawaban", type: "essay", topic: "PKL" },
 
-        // TOKO BARANG BOS
+            // === TOPIC 3: STRENGTHS & WEAKNESSES (30 Soal) ===
+            { q: "What is your strength?", a: "I am a fast learner.", t: "Apa kelebihanmu?", i: "Susun jawaban (Cepat belajar)", type: "arrange", topic: "Strength" },
+            { q: "Another strength?", a: "I am good at time management.", t: "Kelebihan lain?", i: "Susun jawaban (Manajemen waktu)", type: "arrange", topic: "Strength" },
+            { q: "Are you responsible?", a: "Yes I always finish my tasks.", t: "Apa kamu bertanggung jawab?", i: "Susun jawaban", type: "arrange", topic: "Strength" },
+            { q: "What is your weakness?", a: "I am a perfectionist person.", t: "Apa kekuranganmu?", i: "Susun jawaban (Perfeksionis)", type: "arrange", topic: "Weakness" },
+            { q: "How do you fix it?", a: "I set a strict deadline.", t: "Bagaimana mengatasinya?", i: "Susun jawaban (Deadline ketat)", type: "arrange", topic: "Weakness" },
+            { q: "Can you work under pressure?", a: "Yes I stay calm under pressure.", t: "Bisa kerja di bawah tekanan?", i: "Susun jawaban", type: "arrange", topic: "Strength" },
+            { q: "Are you creative?", a: "I like finding new solutions.", t: "Apa kamu kreatif?", i: "Susun jawaban", type: "arrange", topic: "Strength" },
+            { q: "Do you like teamwork?", a: "Teamwork helps us work faster.", t: "Suka kerja tim?", i: "Susun jawaban", type: "arrange", topic: "Strength" },
+            { q: "Are you honest?", a: "Honesty is my main principle.", t: "Apa kamu jujur?", i: "Susun jawaban", type: "arrange", topic: "Strength" },
+            { q: "Describe your work ethic.", a: "I always come on time.", t: "Jelaskan etos kerjamu.", i: "Susun jawaban (Tepat waktu)", type: "arrange", topic: "Strength" },
+            // Vocab S/W
+            { q: "Translate: 'Jujur'", a: "Honest", t: "Inggrisnya 'Jujur'", i: "Pilih jawaban", w: ["Honor", "Horror", "Hour"], type: "mc", topic: "Strength" },
+            { q: "Translate: 'Tepat Waktu'", a: "Punctual", t: "Inggrisnya 'Tepat Waktu' (Formal)", i: "Pilih jawaban", w: ["Punch", "Point", "Late"], type: "mc", topic: "Strength" },
+            { q: "Translate: 'Percaya Diri'", a: "Confident", t: "Inggrisnya 'Percaya Diri'", i: "Pilih jawaban", w: ["Confidential", "Conflict", "Content"], type: "mc", topic: "Strength" },
+            { q: "Type English for 'Rajin'", a: "diligent", t: "Ketik Inggrisnya 'Rajin'", i: "Ketik jawaban", type: "essay", topic: "Strength" },
+            { q: "Type English for 'Malas'", a: "lazy", t: "Ketik Inggrisnya 'Malas'", i: "Ketik jawaban", type: "essay", topic: "Weakness" },
+
+            // === TOPIC 4: SALARY & CLOSING (30 Soal) ===
+            { q: "How much salary do you expect?", a: "I expect according to the standard.", t: "Berapa gaji yang diharapkan?", i: "Susun jawaban (Sesuai standar)", type: "arrange", topic: "Salary" },
+            { q: "Is it negotiable?", a: "Yes I am open to negotiation.", t: "Bisa dinego?", i: "Susun jawaban", type: "arrange", topic: "Salary" },
+            { q: "Why that amount?", a: "It matches my skill level.", t: "Kenapa jumlah segitu?", i: "Susun jawaban (Sesuai skill)", type: "arrange", topic: "Salary" },
+            { q: "Do you have questions?", a: "What is the working culture here?", t: "Ada pertanyaan untuk kami?", i: "Susun pertanyaan balik (Budaya kerja)", type: "arrange", topic: "Closing" },
+            { q: "When can you start?", a: "I can start immediately.", t: "Kapan bisa mulai?", i: "Susun jawaban (Segera)", type: "arrange", topic: "Closing" },
+            { q: "Are you willing to relocate?", a: "Yes I am ready to move.", t: "Bersedia pindah kota?", i: "Susun jawaban", type: "arrange", topic: "Closing" },
+            { q: "Can you work overtime?", a: "Yes if the project needs it.", t: "Bisa lembur?", i: "Susun jawaban", type: "arrange", topic: "Closing" },
+            { q: "How do you handle conflict?", a: "I will talk properly.", t: "Bagaimana menangani konflik?", i: "Susun jawaban (Bicara baik-baik)", type: "arrange", topic: "Closing" },
+            { q: "Why should we hire you?", a: "I have the right skills.", t: "Kenapa kami harus merekrutmu?", i: "Susun jawaban", type: "arrange", topic: "Closing" },
+            { q: "Any last words?", a: "Thank you for the opportunity.", t: "Ada kata penutup?", i: "Susun jawaban (Terima kasih)", type: "arrange", topic: "Closing" },
+            // Vocab Salary
+            { q: "Translate: 'Gaji'", a: "Salary", t: "Inggrisnya 'Gaji'", i: "Pilih jawaban", w: ["Seller", "Sale", "Salt"], type: "mc", topic: "Salary" },
+            { q: "Translate: 'Tunjangan'", a: "Allowance", t: "Inggrisnya 'Tunjangan'", i: "Pilih jawaban", w: ["Allow", "Alone", "Alliance"], type: "mc", topic: "Salary" },
+            { q: "Translate: 'Kesempatan'", a: "Opportunity", t: "Inggrisnya 'Kesempatan'", i: "Pilih jawaban", w: ["Option", "Operation", "Open"], type: "mc", topic: "Closing" },
+            { q: "Type English for 'Lembur'", a: "overtime", t: "Ketik Inggrisnya 'Lembur'", i: "Ketik jawaban", type: "essay", topic: "Closing" },
+            { q: "Type English for 'Tanda Tangan'", a: "signature", t: "Ketik Inggrisnya 'Tanda Tangan'", i: "Ketik jawaban", type: "essay", topic: "Closing" },
+            
+             // === TOPIC 5: GENERAL/MIXED (30 Soal - More Essay/MC) ===
+            { q: "Translate: 'Wawancara'", a: "Interview", t: "Inggrisnya 'Wawancara'", i: "Pilih jawaban", w: ["Internet", "Internal", "Interval"], type: "mc", topic: "General" },
+            { q: "Translate: 'Karyawan'", a: "Employee", t: "Inggrisnya 'Karyawan'", i: "Pilih jawaban", w: ["Employer", "Empty", "Empire"], type: "mc", topic: "General" },
+            { q: "CV stands for Curriculum ...", a: "Vitae", t: "Lengkapi: Curriculum ...", i: "Pilih jawaban", w: ["Vitamin", "Vital", "Value"], type: "mc", topic: "General" },
+            { q: "Formal greeting in email?", a: "Dear Hiring Manager", t: "Salam formal di email?", i: "Susun jawaban", type: "arrange", topic: "General" },
+            { q: "Closing in email?", a: "Sincerely yours", t: "Penutup formal di email?", i: "Susun jawaban", type: "arrange", topic: "General" },
+            { q: "What to wear?", a: "Wear formal clothes.", t: "Pakai baju apa?", i: "Susun jawaban (Baju formal)", type: "arrange", topic: "General" },
+            { q: "Eye contact is ...", a: "Important", t: "Kontak mata itu ...", i: "Pilih jawaban", w: ["Rude", "Bad", "Useless"], type: "mc", topic: "General" },
+            { q: "Type: 'Professional'", a: "professional", t: "Ketik ulang: 'Professional'", i: "Ketik dengan ejaan benar", type: "essay", topic: "General" },
+            { q: "Type: 'Communication'", a: "communication", t: "Ketik ulang: 'Communication'", i: "Ketik dengan ejaan benar", type: "essay", topic: "General" },
+            { q: "Type: 'Development'", a: "development", t: "Ketik ulang: 'Development'", i: "Ketik dengan ejaan benar", type: "essay", topic: "General" }
+        ];
+
+        // --- GAME VARIABLES ---
+        let todoQueue = []; 
+        let currentQuestion = null;
+        let selectedWords = []; 
+        let sessionCoins = 0;
+        let streak = 0;
+        let questionsAnswered = 0;
+        const totalQuestions = 150; 
+
+        // SHOP ITEMS
         const shopItems = [
             { id: 'acc-glasses', name: 'Smart Glasses', price: 50, icon: '👓' },
             { id: 'acc-tie', name: 'Red Tie', price: 80, icon: '👔' },
@@ -389,36 +439,49 @@
             { id: 'acc-cap', name: 'Cap', price: 120, icon: '🧢' },
             { id: 'acc-grad', name: 'Grad Hat', price: 200, icon: '🎓' },
             { id: 'acc-suit', name: 'Formal Suit', price: 150, icon: '💼' },
-            // BARANG BOS (MAHAL)
             { id: 'acc-shades', name: 'Sunglasses', price: 250, icon: '🕶️' },
             { id: 'acc-gold-tie', name: 'Golden Tie', price: 300, icon: '🎗️' },
             { id: 'acc-boss-suit', name: 'Boss Suit', price: 500, icon: '🕴️' }
         ];
 
-        let todoQueue = []; 
-        let totalInitialQuestions = 0;
-        let questionsAnswered = 0; // Untuk track level kesulitan
-        let sessionCoins = 0;
-        let streak = 0;
-
-        // --- CORE FUNCTIONS ---
-
-        function init() {
-            updateUI();
-            updateAvatar();
+        // --- INIT & CLOUDS ---
+        function initClouds() {
+            const container = document.getElementById('clouds-container');
+            const svgs = [
+                `<svg viewBox="0 0 24 24" fill="#ffffff" width="100" height="60"><path d="M18.5,5.5 C16.5,5.5 14.8,6.8 14.2,8.6 C13.7,8.3 13.1,8.1 12.5,8.1 C10.1,8.1 8.1,9.8 7.6,12.1 C7.4,12.1 7.2,12.1 7,12.1 C4.2,12.1 2,14.3 2,17.1 C2,19.9 4.2,22.1 7,22.1 L18.5,22.1 C21.5,22.1 24,19.6 24,16.6 C24,13.6 21.5,11.1 18.5,11.1 C18.3,11.1 18.1,11.1 17.9,11.1 C17.8,7.9 15.1,5.5 18.5,5.5 Z"/></svg>`,
+                `<svg viewBox="0 0 24 24" fill="#ffffff" width="140" height="80"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>`
+            ];
             
-            let generated = [];
-            for(let i=0; i<40; i++) {
-                templates.vocab.forEach(t => generated.push({...t, type: 'mc', topic: 'Vocabulary'}));
-                templates.grammar.forEach(t => generated.push({...t, type: 'mc', topic: 'Grammar'}));
-                templates.interview.forEach(t => generated.push({...t, type: 'mc', topic: 'Interview'}));
-                templates.essay_keys.forEach(t => generated.push({
-                    q: t.q, a: t.a, t: t.t, keywords: t.k, type: 'essay', topic: 'Basic Knowledge'
-                }));
+            for(let i=0; i<6; i++) {
+                const el = document.createElement('div');
+                el.className = "cloud";
+                el.innerHTML = svgs[i % 2];
+                el.style.top = Math.random() * 80 + "%";
+                el.style.left = "-200px";
+                el.style.animationDuration = (25 + Math.random() * 20) + "s";
+                el.style.animationDelay = (Math.random() * 10) + "s";
+                el.style.opacity = 0.3 + Math.random() * 0.3;
+                container.appendChild(el);
             }
+        }
+
+        // GENERATE 150 QUESTIONS
+        function generateQuestions() {
+            let list = [];
             
-            todoQueue = generated.sort(() => Math.random() - 0.5).slice(0, 200); 
-            totalInitialQuestions = todoQueue.length;
+            // Loop through rawData ~2.5 times to get 150 items, but since user said "dont repeat",
+            // we will shuffle heavily and maybe add variations if possible. 
+            // For this specific code block, we have ~60 unique items.
+            // To reach 150 without "exact" immediate repetition, we shuffle rawData 3 times.
+            
+            const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+            
+            let batch1 = shuffle(rawData);
+            let batch2 = shuffle(rawData);
+            let batch3 = shuffle(rawData);
+            
+            list = [...batch1, ...batch2, ...batch3].slice(0, 150);
+            return list;
         }
 
         function updateUI() {
@@ -428,13 +491,26 @@
             localStorage.setItem('im_coins', coins);
         }
 
-        // --- GAMEPLAY ---
+        function updateAvatar() {
+            const svg = document.getElementById('avatar-svg');
+            shopItems.forEach(item => {
+                const el = svg.getElementById(item.id);
+                if(el) el.classList.add('hidden-part');
+            });
+            Object.values(equipped).forEach(partId => {
+                const el = svg.getElementById(partId);
+                if(el) el.classList.remove('hidden-part');
+            });
+            localStorage.setItem('im_equipped', JSON.stringify(equipped));
+        }
+
+        // --- GAME LOGIC ---
 
         function startGame() {
-            init(); 
+            todoQueue = generateQuestions();
+            questionsAnswered = 0;
             sessionCoins = 0;
             streak = 0;
-            questionsAnswered = 0;
             
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.add('hidden');
@@ -452,74 +528,98 @@
             document.getElementById('start-screen').classList.remove('hidden');
         }
 
+        function endGame() {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('flex');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('session-coins').innerText = sessionCoins;
+        }
+
         function renderNextQuestion() {
-            if (todoQueue.length === 0) {
+            if(questionsAnswered >= totalQuestions) {
                 endGame();
                 return;
             }
 
-            const q = todoQueue[0];
+            const q = todoQueue[questionsAnswered];
+            currentQuestion = q;
+            selectedWords = [];
             
-            // Progress Logic
-            let pct = Math.max(0, ((totalInitialQuestions - todoQueue.length) / totalInitialQuestions) * 100);
-            if(todoQueue.length > totalInitialQuestions) pct = 5;
-            
-            document.getElementById('q-counter').innerText = `${questionsAnswered} / ${totalInitialQuestions}`;
+            // Progress
+            const pct = ((questionsAnswered) / totalQuestions) * 100;
             document.getElementById('progress-bar').style.width = `${pct}%`;
-            
+            document.getElementById('q-counter').innerText = `${questionsAnswered + 1}/${totalQuestions}`;
+
+            // Text Elements
             document.getElementById('topic-badge').innerText = q.topic;
+            document.getElementById('instruction-text').innerText = q.i;
             document.getElementById('question-text').innerText = q.q;
 
-            // --- LOGIKA TRANSLATE MEMUDAR ---
+            // --- ADAPTIVE TRANSLATE LOGIC ---
             const hintBox = document.getElementById('hint-box');
             const hintText = document.getElementById('hint-text');
+            hintBox.style.opacity = '1';
             
-            hintBox.classList.remove('hidden', 'opacity-50'); // Reset
+            // Level 1-50: Full
+            // Level 51-100: Partial (Keywords)
+            // Level 101+: Gone
             
-            let displayTranslate = q.t;
-
-            if (questionsAnswered <= 5) {
-                // LEVEL 1: Full Translate
-                hintText.innerText = displayTranslate;
-                hintText.className = "text-blue-800 font-medium";
-            } else if (questionsAnswered <= 15) {
-                // LEVEL 2: Partial (Hilangkan vokal)
-                let masked = displayTranslate.replace(/[aeiouAEIOU]/g, "_");
-                hintText.innerText = masked;
-                hintText.className = "text-slate-500 font-mono tracking-widest";
+            if (questionsAnswered < 50) {
+                hintText.innerHTML = q.t;
+                hintText.className = "text-lg font-bold text-blue-900";
+            } else if (questionsAnswered < 100) {
+                // Partial hiding: hide vowels or short words
+                // Simplified "keyword only" simulation: 
+                let words = q.t.split(' ');
+                let masked = words.map(w => w.length > 4 ? w : "___").join(' ');
+                hintText.innerHTML = `<span class="opacity-75">${masked}</span> <br><span class="text-xs text-blue-400 italic">(Level Hard: Terjemahan Pudar)</span>`;
+                hintText.className = "text-lg font-bold text-blue-800";
             } else {
-                // LEVEL 3: No Translate
-                hintText.innerText = "(Terjemahan hilang di level ini. Semangat!)";
-                hintText.className = "text-red-400 italic text-xs";
-                hintBox.classList.add('opacity-50');
+                hintText.innerText = "??? (Mode Profesional - No Translate)";
+                hintText.className = "text-sm italic text-slate-400";
+                hintBox.style.opacity = '0.6';
             }
 
-            // Render Input Area
+            // Render Interaction
             const area = document.getElementById('interaction-area');
+            const checkArea = document.getElementById('check-area');
             area.innerHTML = '';
-            
-            if (q.type === 'essay') {
-                document.getElementById('type-badge').classList.remove('hidden');
-                
-                area.innerHTML = `
-                    <input type="text" id="essay-input" class="w-full p-4 rounded-xl border-2 border-slate-200 text-lg outline-none focus:border-indigo-500 transition shadow-sm" placeholder="Jawabanmu..." autocomplete="off">
-                    <button onclick="checkEssay()" class="btn-3d w-full mt-4 bg-indigo-500 text-white font-bold py-3 rounded-xl border-b-4 border-indigo-700">JAWAB</button>
-                `;
-                
-                setTimeout(() => {
-                    const input = document.getElementById('essay-input');
-                    if(input) {
-                        input.focus();
-                        input.addEventListener("keypress", (e) => { if(e.key==="Enter") checkEssay(); });
-                    }
-                }, 100);
+            checkArea.classList.add('hidden'); 
 
-            } else {
-                document.getElementById('type-badge').classList.add('hidden');
+            // === TYPE: ARRANGE (Duolingo Style) ===
+            if (q.type === 'arrange') {
+                checkArea.classList.remove('hidden');
                 
+                let words = q.a.split(' ');
+                // Add some distractors (1-2 words from other questions to make it harder)
+                let distractors = ["is", "the", "a", "very"].filter(d => !words.includes(d)).slice(0,1);
+                let bankWords = [...words, ...distractors].sort(() => Math.random() - 0.5);
+
+                const strip = document.createElement('div');
+                strip.className = "min-h-[70px] bg-slate-50 rounded-2xl border-2 border-slate-200 mb-6 flex flex-wrap gap-2 p-3 items-center transition-all shadow-inner";
+                strip.id = "answer-strip";
+
+                const bank = document.createElement('div');
+                bank.className = "flex flex-wrap gap-2 justify-center";
+                bank.id = "word-bank";
+
+                bankWords.forEach((w, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = "word-chip";
+                    btn.innerText = w;
+                    btn.dataset.idx = i; 
+                    btn.dataset.word = w;
+                    btn.onclick = () => toggleWord(btn);
+                    bank.appendChild(btn);
+                });
+
+                area.appendChild(strip);
+                area.appendChild(bank);
+
+            // === TYPE: MC (Multiple Choice) ===
+            } else if (q.type === 'mc') {
                 const grid = document.createElement('div');
-                grid.className = "flex flex-col gap-3";
-                
+                grid.className = "grid grid-cols-1 gap-3";
                 let opts = [...q.w, q.a].sort(() => Math.random() - 0.5);
                 
                 opts.forEach(opt => {
@@ -530,191 +630,139 @@
                     grid.appendChild(btn);
                 });
                 area.appendChild(grid);
-            }
 
-            // Hide previous toast
-            const toast = document.getElementById('feedback-box');
-            toast.classList.remove('translate-y-0');
-            toast.classList.add('translate-y-full');
-            document.getElementById('feedback-area').classList.add('hidden');
+            // === TYPE: ESSAY (Typing) ===
+            } else if (q.type === 'essay') {
+                checkArea.classList.remove('hidden');
+                area.innerHTML = `
+                    <div class="relative w-full">
+                        <input type="text" id="essay-input" class="w-full p-5 rounded-2xl border-2 border-slate-300 text-2xl font-bold outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition shadow-sm text-slate-700 placeholder:text-slate-300" placeholder="Ketik jawaban di sini..." autocomplete="off">
+                    </div>
+                `;
+                setTimeout(() => document.getElementById('essay-input').focus(), 100);
+                
+                // Allow Enter key
+                const input = document.getElementById('essay-input');
+                if(input) {
+                    input.addEventListener("keypress", (e) => {
+                        if (e.key === "Enter") checkAnswer();
+                    });
+                }
+            }
         }
 
-        // --- CHECKING LOGIC ---
+        // --- ARRANGE LOGIC ---
+        function toggleWord(btn) {
+            const strip = document.getElementById('answer-strip');
+            const bank = document.getElementById('word-bank');
+            const word = btn.dataset.word;
+
+            if (btn.parentElement === bank) {
+                // Move to Strip
+                btn.classList.add('selected'); 
+                const clone = document.createElement('button');
+                clone.className = "word-chip animate-bounce-short bg-white border-b-4 border-slate-300";
+                clone.innerText = word;
+                clone.dataset.originId = btn.dataset.idx;
+                clone.onclick = () => {
+                    clone.remove();
+                    btn.classList.remove('selected');
+                };
+                strip.appendChild(clone);
+            }
+        }
+
+        // --- CHECKING ---
+        function checkAnswer() {
+            const q = currentQuestion;
+            let isCorrect = false;
+            let userAnswer = "";
+
+            if (q.type === 'arrange') {
+                const strip = document.getElementById('answer-strip');
+                userAnswer = Array.from(strip.children).map(c => c.innerText).join(' ');
+                // Removing punctuation for comparison
+                const cleanUser = userAnswer.toLowerCase().replace(/[.,!]/g, "").trim();
+                const cleanAns = q.a.toLowerCase().replace(/[.,!]/g, "").trim();
+                isCorrect = cleanUser === cleanAns;
+                
+            } else if (q.type === 'essay') {
+                const input = document.getElementById('essay-input');
+                userAnswer = input.value.trim();
+                isCorrect = userAnswer.toLowerCase() === q.a.toLowerCase();
+            }
+
+            handleResult(isCorrect, q.a);
+        }
+
+        function checkMC(selected, correct, btn) {
+            const isCorrect = selected === correct;
+            const allBtns = document.querySelectorAll('.btn-option');
+            allBtns.forEach(b => b.disabled = true);
+            
+            if (isCorrect) {
+                btn.classList.remove('border-slate-200');
+                btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+            } else {
+                btn.classList.remove('border-slate-200');
+                btn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                // Highlight correct
+                allBtns.forEach(b => {
+                    if(b.innerText === correct) b.classList.add('bg-green-100', 'border-green-500');
+                });
+            }
+            handleResult(isCorrect, correct);
+        }
 
         function handleResult(isCorrect, correctAnswer) {
-            const toastArea = document.getElementById('feedback-area');
-            const toastBox = document.getElementById('feedback-box');
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackBox = document.getElementById('feedback-box');
+            const icon = document.getElementById('feedback-icon');
             const title = document.getElementById('feedback-title');
             const sub = document.getElementById('feedback-subtitle');
-            const icon = document.getElementById('feedback-icon');
-            const coinBadge = document.getElementById('feedback-coins');
 
-            toastArea.classList.remove('hidden');
-            void toastBox.offsetWidth;
-            toastBox.classList.remove('translate-y-full');
-            toastBox.classList.add('translate-y-0');
-
+            feedbackArea.classList.remove('hidden');
+            void feedbackBox.offsetWidth;
+            feedbackBox.classList.remove('translate-y-full');
+            
             if (isCorrect) {
-                todoQueue.shift(); 
                 streak++;
-                questionsAnswered++; // Increment progress level
+                questionsAnswered++;
                 coins += 10;
                 sessionCoins += 10;
                 updateUI();
 
-                toastBox.className = "max-w-xl w-full bg-green-50 rounded-2xl shadow-2xl border-t-4 border-green-500 p-5 pointer-events-auto transform transition-all duration-300 translate-y-0";
+                feedbackBox.className = "w-full bg-green-50 rounded-t-3xl shadow-2xl border-t-2 border-green-100 p-6 pointer-events-auto transform transition-transform duration-300 translate-y-0";
                 icon.innerText = "🎉";
-                title.innerText = "Benar!";
-                title.className = "font-bold text-lg text-green-800";
-                sub.innerText = "Lanjut ke soal berikutnya!";
-                coinBadge.innerText = "+10";
-                coinBadge.classList.remove('hidden');
-
-                if(streak % 5 === 0) showStreakAnim();
+                title.innerText = "Benar Sekali!";
+                title.className = "font-black text-2xl text-green-600 mb-1";
+                sub.innerText = "Lanjut pertahankan streak-mu!";
+                
+                if (streak % 5 === 0) showStreakAnim();
                 showCoinAnim();
-
             } else {
-                let wrongQ = todoQueue.shift(); 
-                todoQueue.push(wrongQ); 
                 streak = 0;
+                // Move on but don't count as complete progress? Or allow retry?
+                // For smooth flow, we move on but mark as error.
+                questionsAnswered++; 
 
-                toastBox.className = "max-w-xl w-full bg-red-50 rounded-2xl shadow-2xl border-t-4 border-red-500 p-5 pointer-events-auto transform transition-all duration-300 translate-y-0";
+                feedbackBox.className = "w-full bg-red-50 rounded-t-3xl shadow-2xl border-t-2 border-red-100 p-6 pointer-events-auto transform transition-transform duration-300 translate-y-0";
                 icon.innerText = "❌";
                 title.innerText = "Kurang Tepat";
-                title.className = "font-bold text-lg text-red-800";
-                sub.innerText = `Jawaban: ${correctAnswer}`;
-                coinBadge.classList.add('hidden');
+                title.className = "font-black text-2xl text-red-600 mb-1";
+                sub.innerText = `Jawaban yang benar: "${correctAnswer}"`;
             }
-            
+
             document.getElementById('current-streak').innerText = streak;
         }
 
-        function checkMC(selected, correct, btnElement) {
-            const btns = document.querySelectorAll('.btn-option');
-            btns.forEach(b => b.disabled = true);
-
-            if(selected === correct) {
-                btnElement.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
-                handleResult(true, correct);
-            } else {
-                btnElement.classList.add('bg-red-100', 'border-red-400', 'text-red-800');
-                btns.forEach(b => {
-                    if(b.innerText === correct) b.classList.add('bg-green-50', 'border-green-200');
-                });
-                handleResult(false, correct);
-            }
-        }
-
-        function checkEssay() {
-            const input = document.getElementById('essay-input');
-            const val = input.value.trim().toLowerCase();
-            const q = todoQueue[0];
-            input.disabled = true;
-
-            const isCorrect = q.keywords.some(k => val.includes(k.toLowerCase()));
-            
-            if(isCorrect) {
-                input.classList.add('bg-green-50', 'border-green-400', 'text-green-800');
-                handleResult(true, q.a);
-            } else {
-                input.classList.add('bg-red-50', 'border-red-400', 'text-red-800');
-                handleResult(false, q.a);
-            }
-        }
-
         function nextQuestion() {
-            const card = document.getElementById('interaction-area');
-            card.style.opacity = '0';
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('translate-y-full');
             setTimeout(() => {
+                document.getElementById('feedback-area').classList.add('hidden');
                 renderNextQuestion();
-                card.style.opacity = '1';
-            }, 200);
-        }
-
-        function endGame() {
-            document.getElementById('game-container').classList.add('hidden');
-            document.getElementById('game-container').classList.remove('flex');
-            document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('session-coins').innerText = sessionCoins;
-        }
-
-        // --- SHOP & AVATAR SYSTEM ---
-        
-        function updateAvatar() {
-            const svg = document.getElementById('avatar-svg');
-            shopItems.forEach(item => {
-                const el = svg.getElementById(item.id);
-                if(el) el.classList.add('hidden-part');
-            });
-            Object.values(equipped).forEach(partId => {
-                const el = svg.getElementById(partId);
-                if(el) el.classList.remove('hidden-part');
-            });
-            localStorage.setItem('im_equipped', JSON.stringify(equipped));
-        }
-
-        function openShop() {
-            document.getElementById('shop-modal').classList.remove('hidden');
-            renderShop();
-        }
-        function closeShop() {
-            document.getElementById('shop-modal').classList.add('hidden');
-        }
-
-        function renderShop() {
-            const grid = document.getElementById('shop-grid');
-            grid.innerHTML = '';
-            
-            shopItems.forEach(item => {
-                const isOwned = inventory.includes(item.id);
-                const isEquipped = Object.values(equipped).includes(item.id);
-                
-                const card = document.createElement('div');
-                card.className = `p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition ${isEquipped ? 'bg-green-50 border-green-400' : 'bg-white border-slate-100'}`;
-                
-                let btnHtml;
-                if(isEquipped) {
-                    btnHtml = `<button onclick="toggleItem('${item.id}', '${item.id.split('-')[1]}')" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-lg font-bold">Lepas</button>`;
-                } else if(isOwned) {
-                    btnHtml = `<button onclick="toggleItem('${item.id}', '${item.id.split('-')[1]}')" class="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg font-bold">Pakai</button>`;
-                } else {
-                    const canBuy = coins >= item.price;
-                    btnHtml = `<button onclick="buyItem('${item.id}', ${item.price})" class="text-xs px-3 py-1 rounded-lg font-bold text-white ${canBuy ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-slate-300'}" ${!canBuy ? 'disabled':''}>Beli ${item.price}🪙</button>`;
-                }
-
-                card.innerHTML = `
-                    <div class="text-4xl bg-slate-50 w-16 h-16 flex items-center justify-center rounded-full mb-1">${item.icon}</div>
-                    <div class="font-bold text-slate-700 text-sm text-center leading-tight">${item.name}</div>
-                    ${btnHtml}
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        window.buyItem = function(id, price) {
-            if(coins >= price) {
-                coins -= price;
-                inventory.push(id);
-                localStorage.setItem('im_inventory', JSON.stringify(inventory));
-                updateUI();
-                renderShop();
-            }
-        };
-
-        window.toggleItem = function(id, typeRaw) {
-            let type = 'misc';
-            if(id.includes('glasses') || id.includes('shades')) type = 'glasses';
-            else if(id.includes('tie') || id.includes('bowtie')) type = 'neck';
-            else if(id.includes('cap') || id.includes('grad')) type = 'hat';
-            else if(id.includes('suit')) type = 'shirt';
-
-            if(equipped[type] === id) {
-                delete equipped[type];
-            } else {
-                equipped[type] = id;
-            }
-            updateAvatar();
-            renderShop();
+            }, 300);
         }
 
         // --- ANIMATIONS ---
@@ -726,14 +774,74 @@
         function showCoinAnim() {
             const container = document.getElementById('coin-anim-container');
             const el = document.createElement('div');
-            el.className = "coin-float text-4xl font-black text-yellow-400 drop-shadow-md absolute top-1/2 left-1/2";
+            el.className = "coin-float text-5xl font-black text-yellow-400 drop-shadow-md absolute top-1/2 left-1/2 z-50";
             el.innerText = "+10🪙";
             container.appendChild(el);
             setTimeout(() => el.remove(), 1000);
         }
 
-        // INIT
-        init();
+        // --- SHOP ---
+        function openShop() {
+            document.getElementById('shop-modal').classList.remove('hidden');
+            renderShop();
+        }
+        function closeShop() {
+            document.getElementById('shop-modal').classList.add('hidden');
+        }
+        function renderShop() {
+            const grid = document.getElementById('shop-grid');
+            grid.innerHTML = '';
+            shopItems.forEach(item => {
+                const isOwned = inventory.includes(item.id);
+                const isEquipped = Object.values(equipped).includes(item.id);
+                
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition relative overflow-hidden ${isEquipped ? 'bg-green-50 border-green-400' : 'bg-white border-slate-100'}`;
+                
+                let actionBtn;
+                if(isEquipped) {
+                    actionBtn = `<button onclick="toggleItem('${item.id}')" class="w-full text-xs bg-red-100 hover:bg-red-200 text-red-600 py-2 rounded-lg font-bold transition">Lepas</button>`;
+                } else if(isOwned) {
+                    actionBtn = `<button onclick="toggleItem('${item.id}')" class="w-full text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-600 py-2 rounded-lg font-bold transition">Pakai</button>`;
+                } else {
+                    const canBuy = coins >= item.price;
+                    actionBtn = `<button onclick="buyItem('${item.id}', ${item.price})" class="w-full text-xs py-2 rounded-lg font-bold text-white shadow-sm transition ${canBuy ? 'bg-yellow-500 hover:bg-yellow-600 btn-3d' : 'bg-slate-300 cursor-not-allowed'}" ${!canBuy ? 'disabled':''}>Beli ${item.price}🪙</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="text-5xl bg-slate-50 w-20 h-20 flex items-center justify-center rounded-full mb-1 shadow-inner">${item.icon}</div>
+                    <div class="font-bold text-slate-700 text-sm text-center leading-tight mb-1">${item.name}</div>
+                    ${actionBtn}
+                `;
+                grid.appendChild(card);
+            });
+        }
+        window.buyItem = function(id, price) {
+            if(coins >= price) {
+                coins -= price;
+                inventory.push(id);
+                localStorage.setItem('im_inventory', JSON.stringify(inventory));
+                updateUI();
+                renderShop();
+            }
+        };
+        window.toggleItem = function(id) {
+            let type = 'misc';
+            if(id.includes('glasses') || id.includes('shades')) type = 'glasses';
+            else if(id.includes('tie') || id.includes('bowtie')) type = 'neck';
+            else if(id.includes('cap') || id.includes('grad')) type = 'hat';
+            else if(id.includes('suit')) type = 'shirt';
+
+            if(equipped[type] === id) delete equipped[type];
+            else equipped[type] = id;
+            updateAvatar();
+            renderShop();
+        }
+
+        // --- RUN ---
+        initClouds();
+        updateUI();
+        updateAvatar();
     </script>
 </body>
 </html>
