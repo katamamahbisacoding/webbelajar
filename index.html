@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Interview Master - Ultimate 150</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
             background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
             overflow-x: hidden;
             color: #475569;
+            touch-action: manipulation; /* Mobile optimization */
         }
         
         /* === CLOUD ANIMATIONS === */
@@ -50,6 +51,13 @@
             border-bottom-width: 0px;
             margin-top: 4px; 
         }
+        .btn-3d:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            border-bottom-width: 4px;
+            margin-top: 0;
+        }
 
         /* Option Buttons */
         .btn-option {
@@ -70,17 +78,17 @@
         /* WORD BANK STYLES */
         .word-chip {
             cursor: pointer;
-            padding: 12px 18px;
+            padding: 10px 14px;
             background: white;
             border: 2px solid #e2e8f0;
             border-bottom: 4px solid #cbd5e1;
-            border-radius: 14px;
+            border-radius: 12px;
             font-weight: 700;
             color: #475569;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: all 0.2s;
             display: inline-block;
-            margin: 6px;
+            margin: 4px;
             user-select: none;
         }
         .word-chip:hover { transform: translateY(-2px); background-color: #f8fafc; }
@@ -111,7 +119,7 @@
         .hidden-part { display: none; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4 relative selection:bg-green-200">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative selection:bg-green-200 pb-20 lg:pb-4">
 
     <!-- BACKGROUND CLOUDS -->
     <div id="clouds-container" class="fixed inset-0 overflow-hidden pointer-events-none"></div>
@@ -145,8 +153,8 @@
         <!-- LEFT: Character & Stats -->
         <div class="w-full lg:w-1/3 flex flex-col items-center gap-4">
             <!-- Avatar Card -->
-            <div class="glass-card p-6 relative w-full max-w-[280px] mx-auto flex flex-col items-center bg-white">
-                <svg id="avatar-svg" viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-xl transform hover:scale-105 transition duration-500" xmlns="http://www.w3.org/2000/svg">
+            <div class="glass-card p-4 lg:p-6 relative w-full max-w-[280px] mx-auto flex flex-col items-center bg-white transition-all">
+                <svg id="avatar-svg" viewBox="0 0 200 200" class="w-32 h-32 lg:w-48 lg:h-48 drop-shadow-xl transform hover:scale-105 transition duration-500" xmlns="http://www.w3.org/2000/svg">
                     <!-- (SVG Content preserved) -->
                     <defs>
                         <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -205,7 +213,7 @@
             </div>
 
             <!-- Question Card -->
-            <div class="glass-card p-6 md:p-10 min-h-[500px] flex flex-col relative bg-white">
+            <div class="glass-card p-6 md:p-10 min-h-[400px] lg:min-h-[500px] flex flex-col relative bg-white transition-all">
                 
                 <!-- Topic & Instruction -->
                 <div class="mb-2 flex flex-col items-start gap-2">
@@ -334,8 +342,6 @@
         let equipped = JSON.parse(localStorage.getItem('im_equipped')) || {}; 
 
         // 150 QUESTIONS - MASSIVE DATABASE
-        // Format: q (Question), a (Answer), t (Translation), i (Instruction), type (arrange/essay/mc), topic
-        
         const rawData = [
             // === TOPIC 1: INTRO (30 Soal) ===
             { q: "Tell me about yourself.", a: "My name is Budi and I am a fresh graduate.", t: "Ceritakan tentang dirimu.", i: "Susun jawaban untuk perkenalan diri", type: "arrange", topic: "Intro" },
@@ -468,12 +474,6 @@
         // GENERATE 150 QUESTIONS
         function generateQuestions() {
             let list = [];
-            
-            // Loop through rawData ~2.5 times to get 150 items, but since user said "dont repeat",
-            // we will shuffle heavily and maybe add variations if possible. 
-            // For this specific code block, we have ~60 unique items.
-            // To reach 150 without "exact" immediate repetition, we shuffle rawData 3 times.
-            
             const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
             
             let batch1 = shuffle(rawData);
@@ -492,13 +492,12 @@
         }
 
         function updateAvatar() {
-            const svg = document.getElementById('avatar-svg');
             shopItems.forEach(item => {
-                const el = svg.getElementById(item.id);
+                const el = document.getElementById(item.id);
                 if(el) el.classList.add('hidden-part');
             });
             Object.values(equipped).forEach(partId => {
-                const el = svg.getElementById(partId);
+                const el = document.getElementById(partId);
                 if(el) el.classList.remove('hidden-part');
             });
             localStorage.setItem('im_equipped', JSON.stringify(equipped));
@@ -560,16 +559,10 @@
             const hintText = document.getElementById('hint-text');
             hintBox.style.opacity = '1';
             
-            // Level 1-50: Full
-            // Level 51-100: Partial (Keywords)
-            // Level 101+: Gone
-            
             if (questionsAnswered < 50) {
                 hintText.innerHTML = q.t;
                 hintText.className = "text-lg font-bold text-blue-900";
             } else if (questionsAnswered < 100) {
-                // Partial hiding: hide vowels or short words
-                // Simplified "keyword only" simulation: 
                 let words = q.t.split(' ');
                 let masked = words.map(w => w.length > 4 ? w : "___").join(' ');
                 hintText.innerHTML = `<span class="opacity-75">${masked}</span> <br><span class="text-xs text-blue-400 italic">(Level Hard: Terjemahan Pudar)</span>`;
@@ -742,8 +735,6 @@
                 showCoinAnim();
             } else {
                 streak = 0;
-                // Move on but don't count as complete progress? Or allow retry?
-                // For smooth flow, we move on but mark as error.
                 questionsAnswered++; 
 
                 feedbackBox.className = "w-full bg-red-50 rounded-t-3xl shadow-2xl border-t-2 border-red-100 p-6 pointer-events-auto transform transition-transform duration-300 translate-y-0";
